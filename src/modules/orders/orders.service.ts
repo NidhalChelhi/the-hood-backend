@@ -245,9 +245,6 @@ export class OrdersService{
                 order.productOrders.map(async (productOrder) => {
                     try{
                         const { productName, usedBatches } = await this.productService.retrieveNormalProductStock(productOrder.productId._id.toString(), productOrder.quantity, order.managerId.location.rank);
-                        await this.orderModel.findOneAndUpdate({_id : order._id, "productOrders.productId" : productOrder.productId},{
-                            $set : { "productOrders.$.status" : OrderStatus.Accepted}
-                        }).exec();
                         return {
                             productName,
                             usedBatches,
@@ -260,6 +257,9 @@ export class OrdersService{
                     }
                 })
             );
+            order.productOrders.forEach((product) => {
+                product.status = OrderStatus.Accepted;
+            })
             if(!order.totalPrice){
                 order.totalPrice = 0;
             }
@@ -268,6 +268,7 @@ export class OrdersService{
                     order.totalPrice += batch.quantityUsed * batch.sellingPrice;
                 })
             })
+            await order.save();
             return {
                 ...retrieveInfo,
                 totalPrice : order.totalPrice
