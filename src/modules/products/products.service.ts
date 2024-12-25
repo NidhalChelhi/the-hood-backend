@@ -10,7 +10,8 @@ import { Product, SupplyBatch } from "./product.schema";
 import { CreateProductDTO } from "./dto/create-product.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
 import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
-import { PopulatedProduct } from "./types";
+import { NormalProductUsedBatch, PopulatedProduct } from "./types";
+import { LocationRank } from "src/common/enums/location-rank.enum";
 
 @Injectable()
 export class ProductsService {
@@ -215,6 +216,61 @@ export class ProductsService {
           batchId: batch._id,
           quantityUsed: usedQuantity,
           purchasePrice: batch.purchasePrice,
+        });
+
+        const updatedBatch = await this.supplyBatchModel.findByIdAndUpdate(
+          batch._id,
+          { $inc: { quantity: -usedQuantity } },
+          { new: true }
+        );
+
+        if (updatedBatch && updatedBatch.quantity <= 0) {
+          await this.productModel.findByIdAndUpdate(productId, {
+            $pull: { supplyBatchIds: updatedBatch._id },
+          });
+          await this.supplyBatchModel.findByIdAndDelete(updatedBatch._id);
+        }
+
+        remainingQuantity -= usedQuantity;
+      }
+
+      return { productName: product.name, usedBatches };
+    } catch (error) {
+      this.logger.error("Error in retrieveStock:", error.message);
+      throw new BadRequestException(
+        `Failed to retrieve stock: ${error.message}`
+      );
+    }
+  }
+  async retrieveNormalProductStock(productId: string, quantity: number, rank : LocationRank) : Promise<{productName : string, usedBatches : NormalProductUsedBatch[]}> {
+    try {
+      const totalStock = await this.getProductStock(productId);
+
+      if (quantity > totalStock) {
+        throw new BadRequestException(
+          `Not enough stock available to fulfill the request. Product Id : ${productId}`
+        );
+      }
+
+      const product = await this.findProductById(productId);
+
+      let remainingQuantity = quantity;
+      const usedBatches : NormalProductUsedBatch[] = [];
+
+      for (const batch of product.supplyBatchIds) {
+        if (remainingQuantity <= 0) break;
+
+        const usedQuantity = Math.min(batch.quantity, remainingQuantity);
+
+        usedBatches.push({
+          batchId: batch._id.toString(),
+          quantityUsed: usedQuantity,
+          purchasePrice: batch.purchasePrice,
+          sellingPrice : (rank == LocationRank.Gold)
+              ? batch.sellingPriceGold
+              : (rank == LocationRank.Silver)
+                  ? batch.sellingPriceSilver
+                  : batch.sellingPriceBronze,
         });
 
         const updatedBatch = await this.supplyBatchModel.findByIdAndUpdate(

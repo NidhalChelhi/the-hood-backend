@@ -11,6 +11,7 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
 import { ProductsModule } from "./modules/products/products.module";
 import { SuppliersModule } from "./modules/suppliers/suppliers.module";
+import { OrderModule } from "./modules/orders/orders.module";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SuppliersModule } from "./modules/suppliers/suppliers.module";
     AuthModule,
     ProductsModule,
     SuppliersModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
