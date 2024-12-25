@@ -30,14 +30,15 @@ export class OrdersController{
     }
 
     @Roles("restaurant_manager")
-    @Get("resto")
+    @Get("resto/info")
     async findAllForUser(@Req() req){
         return await this.orderService.findOrdersForUser(req.user?.userId);
     }
 
     @Roles("restaurant_manager")
     @Post("product-order/:id")
-    async addProductOrder(@Param("id") id : string, createProductOrderDTO : CreateProductOrderDTO){
+    async addProductOrder(@Param("id") id : string,@Body() createProductOrderDTO : CreateProductOrderDTO){
+        console.log(createProductOrderDTO);
         return await this.orderService.addProductOrder(id, createProductOrderDTO);
     }
 

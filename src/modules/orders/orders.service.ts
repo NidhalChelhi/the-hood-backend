@@ -101,7 +101,7 @@ export class OrdersService{
             await this.findById(orderId);
             const order = await this.orderModel
             .findByIdAndUpdate(orderId, {
-                $push : { productOrders : { ...createProductOrderDTO, status : OrderStatus.Pending}}
+                $push : { productOrders : { ...createProductOrderDTO}}
             })
             .populate<{managerId : UserInfo}>({
                 path : "managerId",
@@ -170,7 +170,7 @@ export class OrdersService{
             await this.findById(orderId);
             const order = await this.orderModel
             .findByIdAndUpdate(orderId, {
-                $pull : { productOrders : productId }
+                $pull : { productOrders : {productId : productId} }
             })
             .populate<{managerId : UserInfo}>({
                 path : "managerId",

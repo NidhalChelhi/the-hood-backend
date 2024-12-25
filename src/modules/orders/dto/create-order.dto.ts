@@ -4,7 +4,7 @@ import { CreateProductOrderDTO } from "./create-product-order.dto";
 export class CreateOrderDTO {
    @IsMongoId()
    @IsNotEmpty()
-   manager : string;
+   managerId : string;
 
    @Type(() => CreateProductOrderDTO)
    @IsArray()
