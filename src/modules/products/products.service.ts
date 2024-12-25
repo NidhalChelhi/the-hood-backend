@@ -63,7 +63,7 @@ export class ProductsService {
     try {
       const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
       if (!isValidObjectId) {
-        throw new BadRequestException("Invalid product ID provided.");
+        throw new BadRequestException(`Invalid product ID provided : ${id}`);
       }
 
       const product = await this.productModel

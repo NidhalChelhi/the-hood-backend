@@ -1,7 +1,47 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
+import { Prop, Schema, SchemaFactory, Virtual } from "@nestjs/mongoose"
 import { Document, Types } from "mongoose"
 import { OrderStatus } from "../../common/enums/order-status.enum";
+import { NormalProductUsedBatch } from "../products/types";
 
+@Schema({_id : false})
+export class NormalProductUsedBatchClass extends Document {
+
+    @Prop({required : true})
+    batchId : string;
+
+    @Prop({required : true})
+    quantityUsed : number;
+
+    @Prop({required : true})
+    purchasePrice : number;
+
+    @Prop({required : true})
+    sellingPrice : number;
+}
+export const NormalProductUsedBatchSchema = SchemaFactory.createForClass(NormalProductUsedBatchClass);
+
+@Schema({_id : false})
+export class ProductOrderBatchesInfo extends Document {
+    @Prop({required : true})
+    productName : string;
+
+    @Prop({
+        type: [NormalProductUsedBatchClass],
+        required : true,
+        default : []
+    })
+    usedBatches : NormalProductUsedBatch[];
+
+    @Prop({ default : 0})
+    productPrice : number;
+
+    @Prop({
+        default : 0
+    })
+    productUnitPrice : number;
+}
+
+export const ProductOrderBatchesInfoSchema = SchemaFactory.createForClass(ProductOrderBatchesInfo);
 
 @Schema({timestamps : true, _id : false})
 export class ProductOrder extends Document {
@@ -14,6 +54,12 @@ export class ProductOrder extends Document {
 
     @Prop({ required : true })
     quantity : number;
+
+    @Prop({
+        type : ProductOrderBatchesInfo,
+        required : false,
+    })
+    productOrderInfo : ProductOrderBatchesInfo;
 
     @Prop({ required : true, enum: Object.values(OrderStatus), default : OrderStatus.Pending})
     status : OrderStatus;

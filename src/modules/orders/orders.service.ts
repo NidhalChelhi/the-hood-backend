@@ -11,6 +11,7 @@ import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductsService } from "../products/products.service";
 import { ProductAvailability } from "src/common/enums/product-availabilty.enum";
 import { Product } from "../products/product.schema";
+import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 
 @Injectable()
 export class OrdersService{
@@ -241,41 +242,64 @@ export class OrdersService{
             if(!order){
                 throw new NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            const retrieveInfo = await Promise.all(
-                order.productOrders.map(async (productOrder) => {
-                    try{
-                        const { productName, usedBatches } = await this.productService.retrieveNormalProductStock(productOrder.productId._id.toString(), productOrder.quantity, order.managerId.location.rank);
-                        return {
-                            productName,
-                            usedBatches,
-                            quantity : productOrder.quantity,
-                            status : OrderStatus.Accepted,
-                        }
-                    }catch(error){
-                        this.logger.error(`Error retrieving stock for product ${productOrder.productId} and quantity ${productOrder.quantity} : ${error.message}`);
-                        throw new BadRequestException(`Failed to retrieve stock : ${error.message}`);
-                    }
-                })
-            );
-            order.productOrders.forEach((product) => {
-                product.status = OrderStatus.Accepted;
-            })
             if(!order.totalPrice){
                 order.totalPrice = 0;
             }
-            retrieveInfo.forEach((product) => {
-                product.usedBatches.forEach((batch) => {
-                    order.totalPrice += batch.quantityUsed * batch.sellingPrice;
+            const res = [];
+            for(const productOrder of order.productOrders){
+                const productUsedBatches = await this.productService.retrieveNormalProductStock(productOrder.productId._id.toString(), productOrder.quantity, order.managerId.location.rank);
+                productOrder.$set("productOrderInfo", productUsedBatches);
+                productOrder.productOrderInfo.productPrice = productOrder.productOrderInfo.usedBatches.reduce((acc, batch) => {
+                    return acc + (batch.quantityUsed * batch.sellingPrice);
+                }, 0);
+                productOrder.productOrderInfo.productUnitPrice = productOrder.productOrderInfo.productPrice / productOrder.quantity;
+                productOrder.$set("status", OrderStatus.Accepted);
+                res.push({
+                    productOrderDetails : productOrder.productOrderInfo,
+                    productStatus : productOrder.status,
                 })
-            })
-            await order.save();
+                order.totalPrice += productOrder.productOrderInfo.productPrice;
+            }
+            order.save();
             return {
-                ...retrieveInfo,
+                productsDetail : res,
                 totalPrice : order.totalPrice
             }
         }catch(error){
             this.logger.error(`Error validating order: ${error.message}`);
             throw new BadRequestException(`Failed to validate order: ${error.message}`)
+        }
+    }
+
+    async changeProductOrderPrice(orderId : string, productId : string,productOrderPriceDTO : ProductOrderPriceDTO) {
+        try{
+            const order = await this.orderModel.findById(orderId);
+            for( const productOrder of order.productOrders){
+                if(productOrder.productId.toString() === productId){
+                    if(!productOrderPriceDTO.productPrice && productOrderPriceDTO.productUnitPrice){
+                        order.totalPrice -= productOrder.productOrderInfo.productPrice;
+                        productOrder.productOrderInfo.productUnitPrice = productOrderPriceDTO.productUnitPrice;
+                        productOrder.productOrderInfo.productPrice = productOrder.productOrderInfo.productUnitPrice * productOrder.quantity;
+                        order.totalPrice += productOrder.productOrderInfo.productPrice;
+                    }else if(!productOrderPriceDTO.productUnitPrice && productOrderPriceDTO.productPrice){
+                        order.totalPrice -= productOrder.productOrderInfo.productPrice;
+                        productOrder.productOrderInfo.productPrice = productOrderPriceDTO.productPrice
+                        productOrder.productOrderInfo.productUnitPrice = productOrder.productOrderInfo.productPrice / productOrder.quantity;
+                        order.totalPrice += productOrder.productOrderInfo.productPrice;
+                    }else{
+                       throw new BadRequestException("Changing Product Order Price must either contain unit price or total price") ;
+                    }
+                    order.save();
+                    return {
+                        productDetails : productOrder,
+                        totalPrice : order.totalPrice
+                    }
+                }
+            }
+        }catch (error) {
+            this.logger.log(productOrderPriceDTO);
+            this.logger.error(`Error changing product order price: ${error.message}`);
+            throw new BadRequestException(`Failed to change product order price: ${error.message}`)
         }
     }
 }

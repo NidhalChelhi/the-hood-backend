@@ -4,6 +4,7 @@ import { CreateOrderDTO } from "./dto/create-order.dto";
 import { Roles } from "src/common/decorators/roles.decorator";
 import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
 import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
+import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 
 @Controller("orders")
 export class OrdersController{
@@ -70,5 +71,11 @@ export class OrdersController{
     @Put(":id")
     async validateOrder(@Param("id") id : string){
         return await this.orderService.validateOrder(id);
+    }
+
+    @Roles("admin")
+    @Patch("valid-order/:id")
+    async changeProductOrderPrice(@Param("id") id : string, @Query("product") product : string,@Body() productOrderPriceDTO : ProductOrderPriceDTO){
+        return await this.orderService.changeProductOrderPrice(id, product, productOrderPriceDTO);
     }
 }
