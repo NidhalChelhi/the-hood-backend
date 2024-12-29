@@ -148,6 +148,55 @@ export class ProductsService {
       );
     }
   }
+  async getProductAveragePrice(productId : string) : Promise<{
+    totalQuantity : number,
+    totalPurchasePrice : number,
+    totalSellingPriceGold : number,
+    totalSellingPriceSilver : number,
+    totalSellingPriceBronze : number,
+    averagePurchasePrice : number,
+    averageSellingPriceGold : number,
+    averageSellingPriceSilver : number,
+    averageSellingPriceBronze : number,
+  }> {
+    try {
+      const product = await this.findProductById(productId);
+      Logger.log("Product fetched in getProductStock:", product);
+
+      const totalPrices = product.supplyBatchIds.reduce(
+        (sum, batch) => {
+          return {
+            totalQuantity : sum.totalQuantity + batch.quantity || 0,
+            totalPurchasePrice : sum.totalPurchasePrice + (batch.purchasePrice * (batch.quantity || 0)),
+            totalSellingPriceGold : sum.totalSellingPriceGold + (batch.sellingPriceGold || 0) * (batch.quantity || 0),
+            totalSellingPriceSilver : sum.totalSellingPriceSilver + (batch.sellingPriceSilver || 0) * (batch.quantity || 0),
+            totalSellingPriceBronze : sum.totalSellingPriceBronze + (batch.sellingPriceBronze || 0) * (batch.quantity || 0)
+          }
+        },
+        {
+          totalQuantity : 0,
+          totalPurchasePrice : 0,
+          totalSellingPriceGold : 0,
+          totalSellingPriceSilver : 0,
+          totalSellingPriceBronze : 0,
+        }
+      );
+
+      return {
+        ...totalPrices,
+        averagePurchasePrice : totalPrices.totalPurchasePrice / totalPrices.totalQuantity,
+        averageSellingPriceGold : totalPrices.totalSellingPriceGold / totalPrices.totalQuantity,
+        averageSellingPriceSilver : totalPrices.totalSellingPriceSilver / totalPrices.totalQuantity,
+        averageSellingPriceBronze : totalPrices.totalSellingPriceBronze / totalPrices.totalQuantity,
+      }
+    } catch (error) {
+      this.logger.error("Error in getProductStock:", error.message);
+      throw new BadRequestException(
+        `Failed to calculate product stock: ${error.message}`
+      );
+    }
+
+  }
 
   async getLowStockProducts(): Promise<Product[]> {
     try {

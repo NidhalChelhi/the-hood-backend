@@ -73,6 +73,11 @@ export class OrdersController{
     async validateOrder(@Param("id") id : string){
         return await this.orderService.validateOrder(id);
     }
+    @Roles("admin")
+    @Put("average-price/:id")
+    async validateOrderAveragePrice(@Param("id") id : string){
+        return await this.orderService.validateOrderWithAveragePrice(id);
+    }
 
     @Roles("admin")
     @Patch("valid-order/:id")

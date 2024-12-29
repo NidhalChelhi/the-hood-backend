@@ -12,6 +12,7 @@ import { ProductsService } from "../products/products.service";
 import { ProductAvailability } from "src/common/enums/product-availabilty.enum";
 import { Product } from "../products/product.schema";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
+import { LocationRank } from "src/common/enums/location-rank.enum";
 
 @Injectable()
 export class OrdersService{
@@ -285,6 +286,64 @@ export class OrdersService{
                     return acc + (batch.quantityUsed * batch.sellingPrice);
                 }, 0);
                 productOrder.productOrderInfo.productUnitPrice = productOrder.productOrderInfo.productPrice / productOrder.quantity;
+                productOrder.$set("status", OrderStatus.Accepted);
+                res.push({
+                    productOrderDetails : productOrder.productOrderInfo,
+                    productStatus : productOrder.status,
+                })
+                order.totalPrice += productOrder.productOrderInfo.productPrice;
+            }
+            order.isValidated = true;
+            order.save();
+            return {
+                productsDetail : res,
+                totalPrice : order.totalPrice
+            }
+        }catch(error){
+            this.logger.error(`Error validating order: ${error.message}`);
+            throw new BadRequestException(`Failed to validate order: ${error.message}`)
+        }
+    }
+    async validateOrderWithAveragePrice(orderId : string) {
+        try{
+            const order = await this.orderModel
+            .findById(orderId)
+            .populate<{managerId : UserInfo}>({
+                path : "managerId",
+                select : "username phoneNumber location"
+            })
+            .populate<{ "productOrders.productId" : Product[]}>({
+                path : "productOrders.productId",
+                populate : {
+                    path : "supplyBatchIds"
+                }
+            })
+            .exec();
+            if(!order){
+                throw new NotFoundException(`Failed to fetch order ${orderId}`);
+            }
+            if(order.isConfirmed || order.isValidated){
+                throw new UnauthorizedException("Order already confirmed / validated");
+            }
+            const processingDetails = await this.getOrderProcessingDetails(orderId)
+            if(!processingDetails.every((product) => {
+                return product.productStatus !== ProductAvailability.NotAvailable
+            })){
+                this.logger.error("Called Validate Order with Unsufficient quantites for the product list");
+                throw new PreconditionFailedException("All products must be available before validating an order");
+            }
+            order.totalPrice = 0;
+            const res = [];
+            for(const productOrder of order.productOrders){
+                const productUsedBatches = await this.productService.retrieveNormalProductStock(productOrder.productId._id.toString(), productOrder.quantity, order.managerId.location.rank);
+                productOrder.$set("productOrderInfo", productUsedBatches);
+                const prices = await this.productService.getProductAveragePrice(productOrder.productId._id.toString());
+                productOrder.productOrderInfo.productUnitPrice = (order.managerId.location.rank === LocationRank.Gold) 
+                    ? prices.averageSellingPriceGold
+                    : (order.managerId.location.rank === LocationRank.Silver)
+                        ? prices.averageSellingPriceSilver
+                        : prices.averageSellingPriceBronze;
+                productOrder.productOrderInfo.productPrice = productOrder.productOrderInfo.productUnitPrice * productOrder.quantity;
                 productOrder.$set("status", OrderStatus.Accepted);
                 res.push({
                     productOrderDetails : productOrder.productOrderInfo,
