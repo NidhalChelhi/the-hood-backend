@@ -43,19 +43,20 @@ export class OrdersController{
         return await this.orderService.addProductOrder(id, createProductOrderDTO);
     }
 
-    @Roles("restaurant_manager", "admin")
+    @Roles("admin")
     @Patch("product-order/:id")
     async updateProductOrder(@Param("id") id : string, @Query("product") productId : string, updateProductOrderDTO : UpdateProductOrderDTO){
         return await this.orderService.updateProductOrder(id, productId,updateProductOrderDTO);
     }
 
+    //De preferance nahiwha hedhi l resto manager ma andou lhak ken yasna3 commande
     @Roles("restaurant_manager")
     @Delete("product-order/:id")
     async deleteProductOrder(@Param("id") id : string, @Query("product") productId : string){
         return await this.orderService.deleteProductOrder(id, productId);
     }
 
-    @Roles("restaurant_manager", "admin")
+    @Roles("restaurant_manager")
     @Delete(":id")
     async deleteOrder(@Param("id") id : string){
         return await this.orderService.deleteOrder(id);
@@ -77,5 +78,11 @@ export class OrdersController{
     @Patch("valid-order/:id")
     async changeProductOrderPrice(@Param("id") id : string, @Query("product") product : string,@Body() productOrderPriceDTO : ProductOrderPriceDTO){
         return await this.orderService.changeProductOrderPrice(id, product, productOrderPriceDTO);
+    }
+
+    @Roles("admin")
+    @Patch("valid-order/confirm/:id")
+    async confirmOrder(@Param("id") id : string){
+        return await this.orderService.confirmOrder(id);
     }
 }

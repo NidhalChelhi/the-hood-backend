@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException} from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException, PreconditionFailedException, UnauthorizedException} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Order } from "./orders.schema";
 import { Model } from "mongoose";
@@ -99,21 +99,35 @@ export class OrdersService{
 
     async addProductOrder(orderId : string, createProductOrderDTO : CreateProductOrderDTO) : Promise<OrderInfo>{
         try{
-            await this.findById(orderId);
-            const order = await this.orderModel
-            .findByIdAndUpdate(orderId, {
-                $push : { productOrders : { ...createProductOrderDTO}}
-            })
-            .populate<{managerId : UserInfo}>({
-                path : "managerId",
-                select : "username phoneNumber location"
-            })
-            .populate<{ productOrders : NamedProductOrder[]}>({
-                path : "productOrders.productId",
-                select : "name",
-            })
-            .exec();
-            return order as OrderInfo;
+            const order = await this.orderModel.findById(orderId);
+            if(order.isConfirmed || order.isValidated){
+                throw new UnauthorizedException("Cannot add product to validated / confirmed order");
+            }
+            const product = order.productOrders.find((productOrder) => {
+                return productOrder.productId.toString() === createProductOrderDTO.productId;
+            });
+            if(!product){
+                order.updateOne({
+                    $push : {productOrders : {...createProductOrderDTO}}
+                });
+            }else{
+               product.quantity += createProductOrderDTO.quantity; 
+               product.status = OrderStatus.Pending;
+            }
+            order.save();
+            const populatedOrder = await order
+            .populate<{managerId : UserInfo, productOrders : NamedProductOrder[]}>([
+                {
+                    path : "managerId",
+                    select : "username phoneNumber location"
+                },
+                {
+                    path : "productOrders",
+                    select : "name",
+                }
+            ])
+
+            return populatedOrder as OrderInfo;
         }catch(error){
             this.logger.error(`Error adding product order : ${error.message}`);
             throw new BadRequestException(`Failed to create product order : ${error.message}`)
@@ -122,7 +136,10 @@ export class OrdersService{
 
     async updateProductOrder(orderId : string, productId : string, updateProductOrderDTO : UpdateProductOrderDTO ): Promise<OrderInfo> {
         try{
-            await this.findById(orderId);
+            const check = await this.findById(orderId);
+            if(check.isValidated || check.isConfirmed){
+                throw new UnauthorizedException("Cannot modify Validated / Confirmed Order");
+            }
             //Helper function to make sure that $set doesn't override all the fields
             const updateFields = Object.entries(updateProductOrderDTO).reduce(
                 (acc, [key, value]) => {
@@ -156,6 +173,10 @@ export class OrdersService{
     }
     async deleteOrder(orderId : string) : Promise<Order>{
         try {
+            const check = await this.findById(orderId);
+            if(check.isValidated || check.isConfirmed){
+                throw new UnauthorizedException("Cannot modify Validated / Confirmed Order");
+            }
             const order = await this.orderModel.findByIdAndDelete(orderId).exec();
             if(!order){
                 throw new NotFoundException("Commande Id Not Found");
@@ -168,7 +189,10 @@ export class OrdersService{
     }
     async deleteProductOrder(orderId : string, productId : string) : Promise<OrderInfo>{
         try{
-            await this.findById(orderId);
+            const check = await this.findById(orderId);
+            if(check.isValidated || check.isConfirmed){
+                throw new UnauthorizedException("Cannot modify Validated / Confirmed Order");
+            }
             const order = await this.orderModel
             .findByIdAndUpdate(orderId, {
                 $pull : { productOrders : {productId : productId} }
@@ -242,9 +266,17 @@ export class OrdersService{
             if(!order){
                 throw new NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if(!order.totalPrice){
-                order.totalPrice = 0;
+            if(order.isConfirmed || order.isValidated){
+                throw new UnauthorizedException("Order already confirmed / validated");
             }
+            const processingDetails = await this.getOrderProcessingDetails(orderId)
+            if(!processingDetails.every((product) => {
+                return product.productStatus !== ProductAvailability.NotAvailable
+            })){
+                this.logger.error("Called Validate Order with Unsufficient quantites for the product list");
+                throw new PreconditionFailedException("All products must be available before validating an order");
+            }
+            order.totalPrice = 0;
             const res = [];
             for(const productOrder of order.productOrders){
                 const productUsedBatches = await this.productService.retrieveNormalProductStock(productOrder.productId._id.toString(), productOrder.quantity, order.managerId.location.rank);
@@ -260,6 +292,7 @@ export class OrdersService{
                 })
                 order.totalPrice += productOrder.productOrderInfo.productPrice;
             }
+            order.isValidated = true;
             order.save();
             return {
                 productsDetail : res,
@@ -274,10 +307,13 @@ export class OrdersService{
     async changeProductOrderPrice(orderId : string, productId : string,productOrderPriceDTO : ProductOrderPriceDTO) {
         try{
             const order = await this.orderModel.findById(orderId);
+            if(order.isConfirmed){
+                throw new UnauthorizedException("Cannot modify price for Confirmed Order");
+            }
             for( const productOrder of order.productOrders){
                 if(productOrder.productId.toString() === productId){
                     if(!productOrderPriceDTO.productPrice && productOrderPriceDTO.productUnitPrice){
-                        order.totalPrice -= productOrder.productOrderInfo.productPrice;
+                        order.totalPrice -= productOrder.productOrderInfo.productUnitPrice * productOrder.quantity;
                         productOrder.productOrderInfo.productUnitPrice = productOrderPriceDTO.productUnitPrice;
                         productOrder.productOrderInfo.productPrice = productOrder.productOrderInfo.productUnitPrice * productOrder.quantity;
                         order.totalPrice += productOrder.productOrderInfo.productPrice;
@@ -297,9 +333,36 @@ export class OrdersService{
                 }
             }
         }catch (error) {
-            this.logger.log(productOrderPriceDTO);
             this.logger.error(`Error changing product order price: ${error.message}`);
             throw new BadRequestException(`Failed to change product order price: ${error.message}`)
+        }
+    }
+
+    async confirmOrder(orderId : string) : Promise<OrderInfo>{
+        try{
+            const check = await this.findById(orderId);
+            if(check.isConfirmed){
+                throw new UnauthorizedException("Order already confirmed");
+            }
+            //TODO : chcek if a product order with the same id exists, if so we add the quantity only
+            const order = await this.orderModel
+            .findByIdAndUpdate(orderId, {
+                $set : {isConfirmed : true}
+            },
+            {new : true, runValidators : true})
+            .populate<{managerId : UserInfo}>({
+                path : "managerId",
+                select : "username phoneNumber location"
+            })
+            .populate<{ productOrders : NamedProductOrder[]}>({
+                path : "productOrders.productId",
+                select : "name",
+            })
+            .exec();
+            return order as OrderInfo;
+        }catch(error){
+            this.logger.error(`Error confirming order : ${error.message}`);
+            throw new BadRequestException(`Failed to confirm order : ${error.message}`)
         }
     }
 }

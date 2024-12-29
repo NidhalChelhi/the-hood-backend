@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory, Virtual } from "@nestjs/mongoose"
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose"
 import { Document, Types } from "mongoose"
 import { OrderStatus } from "../../common/enums/order-status.enum";
 import { NormalProductUsedBatch } from "../products/types";
@@ -82,6 +82,12 @@ export class Order extends Document {
 
     @Prop()
     totalPrice? : number;
+
+    @Prop({default : false})
+    isValidated : boolean;
+
+    @Prop({default : false})
+    isConfirmed : boolean;
 }
 //TODO : add validation to make sure every productOrder has a unique product ?
 export const ProductOrderSchema = SchemaFactory.createForClass(ProductOrder);
