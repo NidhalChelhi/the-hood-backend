@@ -12,6 +12,7 @@ import { RolesGuard } from "./common/guards/roles.guard";
 import { ProductsModule } from "./modules/products/products.module";
 import { SuppliersModule } from "./modules/suppliers/suppliers.module";
 import { OrderModule } from "./modules/orders/orders.module";
+import { ClientsModule } from './modules/clients/clients.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { OrderModule } from "./modules/orders/orders.module";
     ProductsModule,
     SuppliersModule,
     OrderModule,
+    ClientsModule,
   ],
   controllers: [AppController],
   providers: [
