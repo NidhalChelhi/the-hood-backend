@@ -14,7 +14,7 @@ import { Product } from "../products/product.schema";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 import { LocationRank } from "../../common/enums/location-rank.enum";
 import { UsersService } from "../users/users.service";
-import { SearcQueryDTO } from "src/common/dto/search-query.dto";
+import { SearchQueryDTO } from "src/common/dto/search-query.dto";
 
 @Injectable()
 export class OrdersService{
@@ -35,7 +35,7 @@ export class OrdersService{
         }
     }
     //TODO add pagination if needed
-    async findAllOrders(searchQuery? : SearcQueryDTO) {
+    async findAllOrders(searchQuery? : SearchQueryDTO) {
         try{
             let options = {}
             if(searchQuery.name){
@@ -109,7 +109,7 @@ export class OrdersService{
         }
     }
 
-    async findOrdersForUser(userId : string, searchQuery? : SearcQueryDTO){
+    async findOrdersForUser(userId : string, searchQuery? : SearchQueryDTO){
         try{
             const query =  this.orderModel
             .find({ "managerId" : new Types.ObjectId(userId)})

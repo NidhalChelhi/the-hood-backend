@@ -6,7 +6,7 @@ import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
 import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 import { ProductQueryDTO } from "./dto/product-query.dto";
-import { SearcQueryDTO } from "../../common/dto/search-query.dto";
+import { SearchQueryDTO } from "../../common/dto/search-query.dto";
 
 @Controller("orders")
 export class OrdersController{
@@ -20,7 +20,7 @@ export class OrdersController{
 
     @Roles("admin")
     @Get()
-    async findAll(@Query() queryParams : SearcQueryDTO) {
+    async findAll(@Query() queryParams : SearchQueryDTO) {
         return await this.orderService.findAllOrders(queryParams);
     }
 
@@ -34,7 +34,7 @@ export class OrdersController{
 
     @Roles("restaurant_manager")
     @Get("resto/info")
-    async findAllForUser(@Req() req, @Query() queryParams : SearcQueryDTO){
+    async findAllForUser(@Req() req, @Query() queryParams : SearchQueryDTO){
         return await this.orderService.findOrdersForUser(req.user?.userId, queryParams);
     }
 

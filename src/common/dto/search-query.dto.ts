@@ -1,6 +1,6 @@
 import { IsOptional, IsString } from "class-validator";
 
-export class SearcQueryDTO {
+export class SearchQueryDTO {
     @IsString()
     @IsOptional()
     name : string;
