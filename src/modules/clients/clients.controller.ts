@@ -12,7 +12,7 @@ import { ClientsService } from "./clients.service";
 import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { Roles } from "../../common/decorators/roles.decorator";
-import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { ClientQueryDTO } from "./dto/client-query.dto";
 
 @Roles("restaurant_manager", "admin")
 @Controller("clients")
@@ -25,7 +25,7 @@ export class ClientsController {
   }
 
   @Get()
-  async findAll(@Query() searchQuery : SearchQueryDTO) {
+  async findAll(@Query() searchQuery : ClientQueryDTO) {
     return this.clientsService.findAll(searchQuery);
   }
 

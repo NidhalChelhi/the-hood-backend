@@ -4,7 +4,7 @@ import { UpdateClientDto } from "./dto/update-client.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Client } from "./clients.schema";
 import { Model } from "mongoose";
-import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { ClientQueryDTO } from "./dto/client-query.dto";
 
 @Injectable()
 export class ClientsService {
@@ -18,7 +18,7 @@ export class ClientsService {
     return await client.save();
   }
 
-  async findAll(searchQuery : SearchQueryDTO){
+  async findAll(searchQuery : ClientQueryDTO){
     try{
     let options = {};
     if(searchQuery.name){
