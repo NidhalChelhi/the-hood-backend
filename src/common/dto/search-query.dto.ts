@@ -11,4 +11,7 @@ export class SearcQueryDTO {
 
     @IsOptional()
     page : number;
+
+    @IsOptional()
+    pointSort : "asc" | "dsc"
 }

@@ -40,6 +40,12 @@ export class ClientsService {
         "lastName" : sortCriteria 
       });
     }
+    if(searchQuery.pointSort){
+      const sortCriteria = (searchQuery.pointSort === 'asc') ? 1 : -1;
+      query.sort({
+        "points" : sortCriteria
+      })
+    }
     const pageNumber = Math.max((searchQuery.page || 1), 1);
     const limit = 10;
     const totalElems = await this.countDocs(options);
