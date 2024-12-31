@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, PreconditionFailedException, UnauthorizedException} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Order } from "./orders.schema";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { CreateOrderDTO } from "./dto/create-order.dto";
 import { NamedProductOrder, OrderInfo, ProductOrderProcessingDetails } from "./types";
 import { UserInfo } from "../users/types";
@@ -9,17 +9,20 @@ import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
 import { OrderStatus } from "src/common/enums/order-status.enum";
 import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductsService } from "../products/products.service";
-import { ProductAvailability } from "src/common/enums/product-availabilty.enum";
+import { ProductAvailability } from "../../common/enums/product-availabilty.enum";
 import { Product } from "../products/product.schema";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
-import { LocationRank } from "src/common/enums/location-rank.enum";
+import { LocationRank } from "../../common/enums/location-rank.enum";
+import { UsersService } from "../users/users.service";
+import { SearcQueryDTO } from "src/common/dto/search-query.dto";
 
 @Injectable()
 export class OrdersService{
     private readonly logger = new Logger(OrdersService.name);
     constructor(
         @InjectModel(Order.name) private readonly orderModel : Model<Order>,
-        private readonly productService : ProductsService
+        private readonly productService : ProductsService,
+        private readonly userService : UsersService
     ){}
 
     async createOrder(createOrderDTO : CreateOrderDTO) : Promise<Order>{
@@ -32,10 +35,17 @@ export class OrdersService{
         }
     }
     //TODO add pagination if needed
-    async findAllOrders() : Promise<OrderInfo[]> {
+    async findAllOrders(searchQuery? : SearcQueryDTO) {
         try{
-            const orders = await this.orderModel
-            .find()
+            let options = {}
+            if(searchQuery.name){
+                const user = await this.userService.findByUsername(searchQuery.name)
+                options = {
+                    "managerId" : user._id
+                }
+            }
+            const query = this.orderModel
+            .find(options)
             .populate<{managerId : UserInfo}>({
                 path : "managerId",
                 select : "username phoneNumber location"
@@ -44,12 +54,36 @@ export class OrdersService{
                 path : "productOrders.productId",
                 select : "name",
             })
-            .exec();
-            return orders as OrderInfo[];
+
+            if(searchQuery.sort){
+                const sortCriteria = (searchQuery.sort == "asc") ? 1 : -1;
+                query.sort({
+                    "createdAt" : sortCriteria
+                })
+            }
+            const pageNumber = Math.max((searchQuery.page || 1), 1);
+            const limit = 10;
+            const totalElems = await this.countDocs(options);
+            const totalPages = Math.ceil(totalElems / limit)
+            if(pageNumber > totalPages){
+                throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+            }
+            const orders : OrderInfo[] = await query.skip((pageNumber - 1) * limit).limit(limit).exec()
+            return {
+                orders,
+                pageNumber,
+                totalElems,
+                totalPages 
+            };
+
         }catch (error){
             this.logger.error("Error fetching orders : ", error.message);
             throw new BadRequestException(`Failed to fetch orders : ${error.message}`)
         }
+    }
+
+    async countDocs(options?) : Promise<number> {
+        return (await this.orderModel.find((options || {})).exec()).length
     }
 
     async findById(id : string) : Promise<OrderInfo>{
@@ -68,17 +102,17 @@ export class OrdersService{
             if(!order){
                 throw new NotFoundException("Order Not Found");
             }
-            return order as OrderInfo;
+            return order;
         }catch (error){
             this.logger.error(`Error fetching order : ${error.message}`);
             throw new BadRequestException(`Failed to fetch order : ${error.message}`)
         }
     }
 
-    async findOrdersForUser(userId : string) : Promise<OrderInfo[]>{
+    async findOrdersForUser(userId : string, searchQuery? : SearcQueryDTO){
         try{
-            const orders = await this.orderModel
-            .find({managerId : userId})
+            const query =  this.orderModel
+            .find({ "managerId" : new Types.ObjectId(userId)})
             .populate<{managerId : UserInfo}>({
                 path : "managerId",
                 select : "username phoneNumber location"
@@ -87,11 +121,32 @@ export class OrdersService{
                 path : "productOrders.productId",
                 select : "name",
             })
-            .exec();
+
+            if(searchQuery.sort){
+                const sortCriteria = (searchQuery.sort == "asc") ? 1 : -1;
+                query.sort({
+                    "createdAt" : sortCriteria
+                })
+            }
+            const pageNumber = Math.max((searchQuery.page || 1), 1);
+            const limit = 10;
+            const totalElems = await this.countDocs({managerId : userId});
+            const totalPages = Math.ceil(totalElems / limit)
+            if(pageNumber > totalPages && totalPages !== 0){
+                throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+            }
+
+            const orders : OrderInfo[] = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
+
             if(!orders){
                 throw new NotFoundException("User does not have any orders");
             }
-            return orders as OrderInfo[];
+            return {
+                orders,
+                pageNumber,
+                totalElems,
+                totalPages 
+            };
         }catch (error){
             this.logger.error(`Error fetching orders for user ${userId} : ${error.message}`);
             throw new BadRequestException(`Failed to fetch orders for user ${userId} : ${error.message}`)

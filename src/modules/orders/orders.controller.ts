@@ -5,6 +5,8 @@ import { Roles } from "src/common/decorators/roles.decorator";
 import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
 import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
+import { ProductQueryDTO } from "./dto/product-query.dto";
+import { SearcQueryDTO } from "../../common/dto/search-query.dto";
 
 @Controller("orders")
 export class OrdersController{
@@ -18,8 +20,8 @@ export class OrdersController{
 
     @Roles("admin")
     @Get()
-    async findAll() {
-        return await this.orderService.findAllOrders();
+    async findAll(@Query() queryParams : SearcQueryDTO) {
+        return await this.orderService.findAllOrders(queryParams);
     }
 
 
@@ -32,8 +34,8 @@ export class OrdersController{
 
     @Roles("restaurant_manager")
     @Get("resto/info")
-    async findAllForUser(@Req() req){
-        return await this.orderService.findOrdersForUser(req.user?.userId);
+    async findAllForUser(@Req() req, @Query() queryParams : SearcQueryDTO){
+        return await this.orderService.findOrdersForUser(req.user?.userId, queryParams);
     }
 
     @Roles("restaurant_manager")
@@ -45,15 +47,15 @@ export class OrdersController{
 
     @Roles("admin")
     @Patch("product-order/:id")
-    async updateProductOrder(@Param("id") id : string, @Query("product") productId : string, updateProductOrderDTO : UpdateProductOrderDTO){
-        return await this.orderService.updateProductOrder(id, productId,updateProductOrderDTO);
+    async updateProductOrder(@Param("id") id : string, @Query() product : ProductQueryDTO, updateProductOrderDTO : UpdateProductOrderDTO){
+        return await this.orderService.updateProductOrder(id, product.productId,updateProductOrderDTO);
     }
 
     //De preferance nahiwha hedhi l resto manager ma andou lhak ken yasna3 commande
     @Roles("restaurant_manager")
     @Delete("product-order/:id")
-    async deleteProductOrder(@Param("id") id : string, @Query("product") productId : string){
-        return await this.orderService.deleteProductOrder(id, productId);
+    async deleteProductOrder(@Param("id") id : string, @Query() product : ProductQueryDTO){
+        return await this.orderService.deleteProductOrder(id, product.productId);
     }
 
     @Roles("restaurant_manager")
@@ -81,8 +83,8 @@ export class OrdersController{
 
     @Roles("admin")
     @Patch("valid-order/:id")
-    async changeProductOrderPrice(@Param("id") id : string, @Query("product") product : string,@Body() productOrderPriceDTO : ProductOrderPriceDTO){
-        return await this.orderService.changeProductOrderPrice(id, product, productOrderPriceDTO);
+    async changeProductOrderPrice(@Param("id") id : string, @Query() product : ProductQueryDTO, @Body() productOrderPriceDTO : ProductOrderPriceDTO){
+        return await this.orderService.changeProductOrderPrice(id, product.productId, productOrderPriceDTO);
     }
 
     @Roles("admin")

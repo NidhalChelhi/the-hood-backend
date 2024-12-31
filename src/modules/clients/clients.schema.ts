@@ -12,7 +12,7 @@ export class Client extends Document {
   @Prop({ required: true })
   email: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, index : true })
   barCode: string;
 
   @Prop({ default: 0 })
