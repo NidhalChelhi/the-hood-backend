@@ -65,7 +65,7 @@ export class OrdersService{
             const limit = 10;
             const totalElems = await this.countDocs(options);
             const totalPages = Math.ceil(totalElems / limit)
-            if(pageNumber > totalPages){
+            if(pageNumber > totalPages && totalPages !== 0){
                 throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
             }
             const orders : OrderInfo[] = await query.skip((pageNumber - 1) * limit).limit(limit).exec()

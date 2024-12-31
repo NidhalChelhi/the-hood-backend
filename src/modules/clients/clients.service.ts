@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Client } from "./clients.schema";
 import { Model } from "mongoose";
+import { SearcQueryDTO } from "src/common/dto/search-query.dto";
 
 @Injectable()
 export class ClientsService {
@@ -17,8 +18,49 @@ export class ClientsService {
     return await client.save();
   }
 
-  async findAll(): Promise<Client[]> {
-    return await this.ClientModel.find().exec();
+  async findAll(searchQuery : SearcQueryDTO){
+    try{
+    let options = {};
+    if(searchQuery.name){
+      options = {
+        $expr : {
+          $regexMatch : {
+            input : { $concat : ["$firstName", "$lastName" ]},
+            regex : searchQuery.name,
+            options: 'i'
+          }
+        }
+      }
+    }
+    const query = this.ClientModel.find(options);
+    if(searchQuery.sort){
+      const sortCriteria = (searchQuery.sort === 'asc') ? 1 : -1;
+      query.sort({
+        "firstName" : sortCriteria,
+        "lastName" : sortCriteria 
+      });
+    }
+    const pageNumber = Math.max((searchQuery.page || 1), 1);
+    const limit = 10;
+    const totalElems = await this.countDocs(options);
+    const totalPages = Math.ceil(totalElems / limit);
+    if(pageNumber > totalPages && totalPages !== 0){
+        throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+    }
+    const clients = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
+    return {
+      clients,
+      pageNumber,
+      totalElems,
+      totalPages
+    }
+  }catch(error){
+    throw new InternalServerErrorException(`Failed to get clients : ${error.message}`)
+  }
+  }
+
+  async countDocs(options){
+    return await this.ClientModel.countDocuments(options).exec();
   }
 
   async findById(id: string): Promise<Client> {
