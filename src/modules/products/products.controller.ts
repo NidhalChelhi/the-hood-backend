@@ -6,12 +6,14 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { CreateProductDTO } from "./dto/create-product.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
 import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
 import { Public } from "src/common/decorators/public.decorator";
+import { ProductQueryDTO } from "./dto/product-query.dto";
 
 @Public()
 @Controller("products")
@@ -24,8 +26,8 @@ export class ProductsController {
   }
 
   @Get()
-  async findAllProducts() {
-    return this.productsService.findAllProducts();
+  async findAllProducts(@Query() serachQuery : ProductQueryDTO) {
+    return this.productsService.findAllProducts(serachQuery);
   }
 
   @Get("raw-materials")

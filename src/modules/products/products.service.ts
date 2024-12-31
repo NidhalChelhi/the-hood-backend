@@ -12,6 +12,7 @@ import { UpdateProductDTO } from "./dto/update-product.dto";
 import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
 import { NormalProductUsedBatch, PopulatedProduct } from "./types";
 import { LocationRank } from "src/common/enums/location-rank.enum";
+import { ProductQueryDTO } from "./dto/product-query.dto";
 
 @Injectable()
 export class ProductsService {
@@ -40,17 +41,80 @@ export class ProductsService {
     }
   }
 
-  async findAllProducts(): Promise<PopulatedProduct[]> {
+  async countProductDocs(options){
+    return await this.productModel.countDocuments(options).exec();
+  }
+
+  async findAllProducts(productQuery : ProductQueryDTO){
     try {
-      const products = await this.productModel
-        .find()
+      const options = { $and : []}
+      if(productQuery.name){
+        options.$and.push({
+          $expr : {
+            $regexMatch : {
+              input : "$name",
+              regex : productQuery.name,
+              options : 'i'
+            }
+          }
+        });
+      }
+      if(productQuery.belowStockLimit){
+        options.$and.push({
+          "isBelowStockLimit" : true
+        });
+      }
+      if(productQuery.raw){
+        options.$and.push({
+          "isRawMaterial" : (productQuery.raw === "raw") ? true : false,
+        });
+      }
+
+      if(productQuery.unit){
+        options.$and.push({
+          "unit" : productQuery.unit
+        });
+      }
+
+      if(productQuery.active){
+        options.$and.push({
+          "isActive" : true
+        });
+      }
+      const query = this.productModel
+        .find(options)
         .populate<{ supplyBatchIds: SupplyBatch[] }>({
           path: "supplyBatchIds",
           model: "SupplyBatch",
         })
-        .exec();
+      
+      if(productQuery.sort){
+        const sortCriteria = (productQuery.sort === "asc") ? 1 : -1;
+        query.sort({
+          "name" : sortCriteria
+        })
+      }
+      if(productQuery.sortStockLimit){
+        const sortCriteria = (productQuery.sortStockLimit === "asc") ? 1 : -1;
+        query.sort({
+          "stockLimit" : sortCriteria
+        })
+      }
+    const pageNumber = Math.max((productQuery.page || 1), 1);
+    const limit = 10;
+    const totalElems = await this.countProductDocs(options);
+    const totalPages = Math.ceil(totalElems / limit);
+    if(pageNumber > totalPages && totalPages !== 0){
+        throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+    }
+    const products = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
 
-      return products as PopulatedProduct[];
+    return {
+      products,
+      pageNumber,
+      totalElems,
+      totalPages
+    };
     } catch (error) {
       this.logger.error("Error fetching products:", error.message);
       throw new BadRequestException(
