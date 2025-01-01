@@ -5,7 +5,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model, RootFilterQuery } from "mongoose";
 import { Product, SupplyBatch } from "./product.schema";
 import { CreateProductDTO } from "./dto/create-product.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
@@ -13,6 +13,7 @@ import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
 import { NormalProductUsedBatch, PopulatedProduct } from "./types";
 import { LocationRank } from "src/common/enums/location-rank.enum";
 import { ProductQueryDTO } from "./dto/product-query.dto";
+import { PaginatedProducts } from "./dto/paginated-product.dto";
 
 @Injectable()
 export class ProductsService {
@@ -41,13 +42,13 @@ export class ProductsService {
     }
   }
 
-  async countProductDocs(options){
+  async countProductDocs(options : RootFilterQuery<Product> ){
     return await this.productModel.countDocuments(options).exec();
   }
 
-  async findAllProducts(productQuery : ProductQueryDTO){
+  async findAllProducts(productQuery : ProductQueryDTO) : Promise<PaginatedProducts> {
     try {
-      const options = { $and : []}
+      const options  : RootFilterQuery<Product> = { $and : []}
       if(productQuery.name){
         options.$and.push({
           $expr : {
@@ -107,7 +108,7 @@ export class ProductsService {
     if(pageNumber > totalPages && totalPages !== 0){
         throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
     }
-    const products = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
+    const products : PopulatedProduct[] = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
 
     return {
       products,

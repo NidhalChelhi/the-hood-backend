@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException, PreconditionFailedException, UnauthorizedException} from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Order } from "./orders.schema";
-import { Model, Types } from "mongoose";
+import { Model, RootFilterQuery, Types } from "mongoose";
 import { CreateOrderDTO } from "./dto/create-order.dto";
 import { NamedProductOrder, OrderInfo, ProductOrderProcessingDetails } from "./types";
 import { UserInfo } from "../users/types";
@@ -15,6 +15,7 @@ import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 import { LocationRank } from "../../common/enums/location-rank.enum";
 import { UsersService } from "../users/users.service";
 import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { PaginatedOrders } from "./dto/paginated-order.dto";
 
 @Injectable()
 export class OrdersService{
@@ -34,15 +35,13 @@ export class OrdersService{
             throw new BadRequestException(`Failed to create order : ${error.message}`)
         }
     }
-    //TODO add pagination if needed
-    async findAllOrders(searchQuery? : SearchQueryDTO) {
+    async findAllOrders(searchQuery? : SearchQueryDTO) : Promise<PaginatedOrders> {
         try{
-            let options = {}
+            const options  : RootFilterQuery<Order> = {}
             if(searchQuery.name){
-                const user = await this.userService.findByUsername(searchQuery.name)
-                options = {
-                    "managerId" : user._id
-                }
+                const users = await this.userService.findLikeUserName(searchQuery.name);
+                const userIds = users.map((user) => user._id);
+                options.managerId = { $in : userIds};
             }
             const query = this.orderModel
             .find(options)
@@ -82,8 +81,8 @@ export class OrdersService{
         }
     }
 
-    async countDocs(options?) : Promise<number> {
-        return (await this.orderModel.find((options || {})).exec()).length
+    async countDocs(options? : RootFilterQuery<Order>) : Promise<number> {
+        return await this.orderModel.countDocuments(options).exec();
     }
 
     async findById(id : string) : Promise<OrderInfo>{

@@ -4,12 +4,14 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, RootFilterQuery } from "mongoose";
 import { User } from "./user.schema";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { UpdateUserDTO } from "./dto/update-user.dto";
 import { UserQueryDTO } from "./dto/user-query.dto";
+import { PaginatedUsers } from "./dto/paginated-user.dto";
+import { UserRole } from "src/common/enums/roles.enum";
 
 @Injectable()
 export class UsersService {
@@ -42,52 +44,56 @@ export class UsersService {
     return newUser.save();
   }
 
-  async findAll(searchQuery : UserQueryDTO) {
-    const options = { $and : []};
-    if(searchQuery.name){
-      options.$and .push({
-        $expr : {
-          $regexMatch : {
-            input : "$username",
-            regex : searchQuery.name,
-            options : 'i'
-          }
-        }
+  async findAll(searchQuery: UserQueryDTO): Promise<PaginatedUsers> {
+    const options: RootFilterQuery<User> = { $and: [] };
+    if (searchQuery.name) {
+      options.$and.push({
+        $expr: {
+          $regexMatch: {
+            input: "$username",
+            regex: searchQuery.name,
+            options: "i",
+          },
+        },
       });
     }
-    if(searchQuery.locationName){
+    if (searchQuery.locationName) {
       options.$and.push({
-        $expr : {
-          $regexMatch : {
-            input : "$location.name",
-            regex : searchQuery.locationName,
-            options : 'i'
-          }
-        }
-
+        $expr: {
+          $regexMatch: {
+            input: "$location.name",
+            regex: searchQuery.locationName,
+            options: "i",
+          },
+        },
       });
     }
-    if(searchQuery.locationRank){
+    if (searchQuery.locationRank) {
       options.$and.push({
-        "location.rank" : searchQuery.locationRank,
+        "location.rank": searchQuery.locationRank,
       });
     }
     const query = this.userModel.find(options);
-    if(searchQuery.sort){
-      const sortCriteria = (searchQuery.sort === 'asc') ? 1 : -1;
+    if (searchQuery.sort) {
+      const sortCriteria = searchQuery.sort === "asc" ? 1 : -1;
       query.sort({
-        "username" : sortCriteria,
+        username: sortCriteria,
       });
     }
-    const pageNumber = Math.max((searchQuery.page || 1), 1);
+    const pageNumber = Math.max(searchQuery.page || 1, 1);
     const limit = 10;
     const totalElems = await this.countDocs(options);
     const totalPages = Math.ceil(totalElems / limit);
-    if(pageNumber > totalPages && totalPages !== 0){
-        throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+    if (pageNumber > totalPages && totalPages !== 0) {
+      throw new BadRequestException(
+        `Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`
+      );
     }
 
-    const users = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
+    const users = await query
+      .skip((pageNumber - 1) * limit)
+      .limit(limit)
+      .exec();
     return {
       users,
       pageNumber,
@@ -96,8 +102,27 @@ export class UsersService {
     };
   }
 
-  async countDocs(options) {
+  async countDocs(options: RootFilterQuery<User>) {
     return await this.userModel.countDocuments(options);
+  }
+
+  // This is only for internal use in the order module, you can simply use the find all function to search by username
+  async findLikeUserName(username: string): Promise<User[]> {
+    const options: RootFilterQuery<User> = {
+      $and: [
+        {
+          $expr: {
+            $regexMatch: {
+              input: "$username",
+              regex: username,
+              options: "i",
+            },
+          },
+        },
+        { role : UserRole.RestaurantManager }
+      ],
+    };
+    return await this.userModel.find(options).exec();
   }
 
   async findByUsername(username: string): Promise<User | null> {
