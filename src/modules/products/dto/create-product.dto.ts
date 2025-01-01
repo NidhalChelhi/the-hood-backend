@@ -26,4 +26,8 @@ export class CreateProductDTO {
   @IsBoolean()
   @IsOptional()
   isRawMaterial?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive?: boolean;
 }
