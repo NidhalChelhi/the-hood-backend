@@ -7,11 +7,13 @@ import {
   Param,
   Body,
   NotFoundException,
+  Query,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
 import { Roles } from "../../common/decorators/roles.decorator";
+import { UserQueryDTO } from "./dto/user-query.dto";
 
 @Controller("users")
 export class UsersController {
@@ -25,8 +27,8 @@ export class UsersController {
 
   @Roles("admin")
   @Get()
-  async findAll() {
-    return this.usersService.findAll();
+  async findAll(@Query() serachQuery : UserQueryDTO) {
+    return this.usersService.findAll(serachQuery);
   }
 
   @Roles("admin")

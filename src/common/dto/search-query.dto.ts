@@ -11,7 +11,4 @@ export class SearchQueryDTO {
 
     @IsOptional()
     page : number;
-
-    @IsOptional()
-    pointSort : "asc" | "dsc"
 }

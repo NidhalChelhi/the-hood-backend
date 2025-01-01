@@ -3,8 +3,9 @@ import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { InjectModel } from "@nestjs/mongoose";
 import { Client } from "./clients.schema";
-import { Model } from "mongoose";
-import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { Model, RootFilterQuery } from "mongoose";
+import { ClientQueryDTO } from "./dto/client-query.dto";
+import { PaginatedClients } from "./dto/paginated-client.dto";
 
 @Injectable()
 export class ClientsService {
@@ -18,9 +19,9 @@ export class ClientsService {
     return await client.save();
   }
 
-  async findAll(searchQuery : SearchQueryDTO){
+  async findAll(searchQuery : ClientQueryDTO) : Promise<PaginatedClients> {
     try{
-    let options = {};
+    let options : RootFilterQuery<Client> = {};
     if(searchQuery.name){
       options = {
         $expr : {
@@ -65,7 +66,7 @@ export class ClientsService {
   }
   }
 
-  async countDocs(options){
+  async countDocs(options : RootFilterQuery<Client> ){
     return await this.ClientModel.countDocuments(options).exec();
   }
 
