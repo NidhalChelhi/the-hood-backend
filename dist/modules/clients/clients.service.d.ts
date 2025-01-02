@@ -1,24 +1,16 @@
 import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { Client } from "./clients.schema";
-import { Model } from "mongoose";
-import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { Model, RootFilterQuery } from "mongoose";
+import { ClientQueryDTO } from "./dto/client-query.dto";
+import { PaginatedClients } from "./dto/paginated-client.dto";
 export declare class ClientsService {
     private readonly ClientModel;
     private readonly logger;
     constructor(ClientModel: Model<Client>);
     create(createClientDto: CreateClientDto): Promise<Client>;
-    findAll(searchQuery: SearchQueryDTO): Promise<{
-        clients: (import("mongoose").Document<unknown, {}, Client> & Client & Required<{
-            _id: unknown;
-        }> & {
-            __v: number;
-        })[];
-        pageNumber: number;
-        totalElems: number;
-        totalPages: number;
-    }>;
-    countDocs(options: any): Promise<number>;
+    findAll(searchQuery: ClientQueryDTO): Promise<PaginatedClients>;
+    countDocs(options: RootFilterQuery<Client>): Promise<number>;
     findById(id: string): Promise<Client>;
     findByBarCode(barCode: string): Promise<Client>;
     addPoints(id: string, amount: number): Promise<number>;

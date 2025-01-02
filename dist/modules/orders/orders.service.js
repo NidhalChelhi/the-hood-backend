@@ -33,7 +33,20 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async createOrder(createOrderDTO) {
         try {
             const order = new this.orderModel(createOrderDTO);
-            return await order.save();
+            order.productOrders = order.originalProductOrders;
+            const savedOrder = await order.save();
+            const populatedOrder = await savedOrder
+                .populate([
+                {
+                    path: "managerId",
+                    select: "username phoneNumber location"
+                },
+                {
+                    path: "originalProductOrders.productId",
+                    select: "name",
+                }
+            ]);
+            return populatedOrder;
         }
         catch (error) {
             this.logger.error("Error creating order : ", error.message);
@@ -42,12 +55,11 @@ let OrdersService = OrdersService_1 = class OrdersService {
     }
     async findAllOrders(searchQuery) {
         try {
-            let options = {};
+            const options = {};
             if (searchQuery.name) {
-                const user = await this.userService.findByUsername(searchQuery.name);
-                options = {
-                    "managerId": user._id
-                };
+                const users = await this.userService.findLikeUserName(searchQuery.name);
+                const userIds = users.map((user) => user._id);
+                options.managerId = { $in: userIds };
             }
             const query = this.orderModel
                 .find(options)
@@ -86,7 +98,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
         }
     }
     async countDocs(options) {
-        return (await this.orderModel.find((options || {})).exec()).length;
+        return await this.orderModel.countDocuments(options).exec();
     }
     async findById(id) {
         try {
@@ -120,7 +132,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 select: "username phoneNumber location"
             })
                 .populate({
-                path: "productOrders.productId",
+                path: "originalProductOrders.productId",
                 select: "name",
             });
             if (searchQuery.sort) {
@@ -155,30 +167,37 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async addProductOrder(orderId, createProductOrderDTO) {
         try {
             const order = await this.orderModel.findById(orderId);
-            if (order.isConfirmed || order.isValidated) {
+            if (order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Validated) {
                 throw new common_1.UnauthorizedException("Cannot add product to validated / confirmed order");
             }
             const product = order.productOrders.find((productOrder) => {
                 return productOrder.productId.toString() === createProductOrderDTO.productId;
             });
+            const originalProduct = order.originalProductOrders.find((productOrder) => {
+                return productOrder.productId.toString() === createProductOrderDTO.productId;
+            });
             if (!product) {
-                order.updateOne({
-                    $push: { productOrders: { ...createProductOrderDTO } }
-                });
+                this.logger.debug(`Wselna lena`);
+                await order.updateOne({
+                    $push: {
+                        productOrders: { ...createProductOrderDTO },
+                        originalProductOrders: { ...createProductOrderDTO }
+                    }
+                }, { new: true, runValidators: true }).exec();
             }
             else {
                 product.quantity += createProductOrderDTO.quantity;
-                product.status = order_status_enum_1.OrderStatus.Pending;
+                originalProduct.quantity += createProductOrderDTO.quantity;
             }
-            order.save();
-            const populatedOrder = await order
+            const newOrder = await order.save();
+            const populatedOrder = await newOrder
                 .populate([
                 {
                     path: "managerId",
                     select: "username phoneNumber location"
                 },
                 {
-                    path: "productOrders",
+                    path: "originalProductOrders",
                     select: "name",
                 }
             ]);
@@ -189,21 +208,15 @@ let OrdersService = OrdersService_1 = class OrdersService {
             throw new common_1.BadRequestException(`Failed to create product order : ${error.message}`);
         }
     }
-    async updateProductOrder(orderId, productId, updateProductOrderDTO) {
+    async updateProductOrder(orderId, productId, quantity) {
         try {
             const check = await this.findById(orderId);
-            if (check.isValidated || check.isConfirmed) {
-                throw new common_1.UnauthorizedException("Cannot modify Validated / Confirmed Order");
+            if (check.status !== order_status_enum_1.OrderStatus.Pending) {
+                throw new common_1.UnauthorizedException("Cannot modify Non Pending Order");
             }
-            const updateFields = Object.entries(updateProductOrderDTO).reduce((acc, [key, value]) => {
-                if (value !== undefined) {
-                    acc[`productOrders.$.${key}`] = value;
-                }
-                return acc;
-            }, {});
             const order = await this.orderModel
-                .findByIdAndUpdate({ _id: orderId, "productOrders.productId": productId }, {
-                $set: updateFields,
+                .findOneAndUpdate({ _id: orderId, "productOrders.productId": productId }, {
+                $set: { "productOrders.$.quantity": quantity },
             }, { new: true, runValidators: true })
                 .populate({
                 path: "managerId",
@@ -217,15 +230,15 @@ let OrdersService = OrdersService_1 = class OrdersService {
             return order;
         }
         catch (error) {
-            this.logger.error(`Error updating product order : ${error.message}`);
+            this.logger.error(`Error updating product order : ${error}`);
             throw new common_1.BadRequestException(`Failed to update product order : ${error.message}`);
         }
     }
     async deleteOrder(orderId) {
         try {
             const check = await this.findById(orderId);
-            if (check.isValidated || check.isConfirmed) {
-                throw new common_1.UnauthorizedException("Cannot modify Validated / Confirmed Order");
+            if (check.status === order_status_enum_1.OrderStatus.Confirmed || check.status === order_status_enum_1.OrderStatus.Validated) {
+                throw new common_1.UnauthorizedException("Cannot delete Validated / Confirmed Order");
             }
             const order = await this.orderModel.findByIdAndDelete(orderId).exec();
             if (!order) {
@@ -241,19 +254,22 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async deleteProductOrder(orderId, productId) {
         try {
             const check = await this.findById(orderId);
-            if (check.isValidated || check.isConfirmed) {
+            if (check.status === order_status_enum_1.OrderStatus.Validated || check.status === order_status_enum_1.OrderStatus.Confirmed) {
                 throw new common_1.UnauthorizedException("Cannot modify Validated / Confirmed Order");
             }
             const order = await this.orderModel
                 .findByIdAndUpdate(orderId, {
-                $pull: { productOrders: { productId: productId } }
+                $pull: { originalProductOrders: { productId: productId }, productOrders: { productId: productId } }
+            }, {
+                new: true,
+                runValidators: true
             })
                 .populate({
                 path: "managerId",
                 select: "username phoneNumber location"
             })
                 .populate({
-                path: "productOrders.productId",
+                path: "originalProductOrders.productId",
                 select: "name",
             })
                 .exec();
@@ -299,6 +315,34 @@ let OrdersService = OrdersService_1 = class OrdersService {
             throw new common_1.BadRequestException(`Failed to fetch order processing details : ${error.message}`);
         }
     }
+    async refuseOrder(orderId) {
+        try {
+            const order = await this.orderModel.findById(orderId);
+            for (const productOrder of order.originalProductOrders) {
+                productOrder.quantity = 0;
+            }
+            order.updateOne({
+                $set: { productOrders: [] }
+            });
+            order.save();
+            const populatedOrder = await order
+                .populate([
+                {
+                    path: "managerId",
+                    select: "username phoneNumber location"
+                },
+                {
+                    path: "productOrders",
+                    select: "name",
+                }
+            ]);
+            return populatedOrder;
+        }
+        catch (error) {
+            this.logger.error(`Error refusing order : ${error.message}`);
+            throw new common_1.BadRequestException(`Failed to refuse order ${error.message}`);
+        }
+    }
     async validateOrder(orderId) {
         try {
             const order = await this.orderModel
@@ -313,11 +357,17 @@ let OrdersService = OrdersService_1 = class OrdersService {
                     path: "supplyBatchIds"
                 }
             })
+                .populate({
+                path: "originalProductOrders.productId",
+                populate: {
+                    path: "supplyBatchIds"
+                }
+            })
                 .exec();
             if (!order) {
                 throw new common_1.NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if (order.isConfirmed || order.isValidated) {
+            if (order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Validated) {
                 throw new common_1.UnauthorizedException("Order already confirmed / validated");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
@@ -336,17 +386,13 @@ let OrdersService = OrdersService_1 = class OrdersService {
                     return acc + (batch.quantityUsed * batch.sellingPrice);
                 }, 0);
                 productOrder.productOrderInfo.productUnitPrice = productOrder.productOrderInfo.productPrice / productOrder.quantity;
-                productOrder.$set("status", order_status_enum_1.OrderStatus.Accepted);
-                res.push({
-                    productOrderDetails: productOrder.productOrderInfo,
-                    productStatus: productOrder.status,
-                });
+                res.push(productOrder.productOrderInfo);
                 order.totalPrice += productOrder.productOrderInfo.productPrice;
             }
-            order.isValidated = true;
+            order.status = order_status_enum_1.OrderStatus.Validated;
             order.save();
             return {
-                productsDetail: res,
+                productsDetails: res,
                 totalPrice: order.totalPrice
             };
         }
@@ -373,7 +419,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
             if (!order) {
                 throw new common_1.NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if (order.isConfirmed || order.isValidated) {
+            if (order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Validated) {
                 throw new common_1.UnauthorizedException("Order already confirmed / validated");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
@@ -395,17 +441,13 @@ let OrdersService = OrdersService_1 = class OrdersService {
                         ? prices.averageSellingPriceSilver
                         : prices.averageSellingPriceBronze;
                 productOrder.productOrderInfo.productPrice = productOrder.productOrderInfo.productUnitPrice * productOrder.quantity;
-                productOrder.$set("status", order_status_enum_1.OrderStatus.Accepted);
-                res.push({
-                    productOrderDetails: productOrder.productOrderInfo,
-                    productStatus: productOrder.status,
-                });
+                res.push(productOrder.productOrderInfo);
                 order.totalPrice += productOrder.productOrderInfo.productPrice;
             }
-            order.isValidated = true;
+            order.status = order_status_enum_1.OrderStatus.Validated;
             order.save();
             return {
-                productsDetail: res,
+                productsDetails: res,
                 totalPrice: order.totalPrice
             };
         }
@@ -417,7 +459,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async changeProductOrderPrice(orderId, productId, productOrderPriceDTO) {
         try {
             const order = await this.orderModel.findById(orderId);
-            if (order.isConfirmed) {
+            if (order.status === order_status_enum_1.OrderStatus.Confirmed) {
                 throw new common_1.UnauthorizedException("Cannot modify price for Confirmed Order");
             }
             for (const productOrder of order.productOrders) {
@@ -453,12 +495,12 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async confirmOrder(orderId) {
         try {
             const check = await this.findById(orderId);
-            if (check.isConfirmed) {
+            if (check.status === order_status_enum_1.OrderStatus.Confirmed) {
                 throw new common_1.UnauthorizedException("Order already confirmed");
             }
             const order = await this.orderModel
                 .findByIdAndUpdate(orderId, {
-                $set: { isConfirmed: true }
+                $set: { status: order_status_enum_1.OrderStatus.Confirmed }
             }, { new: true, runValidators: true })
                 .populate({
                 path: "managerId",

@@ -1,47 +1,37 @@
 import { Order } from "./orders.schema";
-import { Model } from "mongoose";
+import { Model, RootFilterQuery } from "mongoose";
 import { CreateOrderDTO } from "./dto/create-order.dto";
-import { OrderInfo, ProductOrderProcessingDetails } from "./types";
+import { OrderInfo, OriginalOrderInfo, ProductOrderProcessingDetails, ValidatedOrderInfo } from "./types";
 import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
-import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductsService } from "../products/products.service";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 import { UsersService } from "../users/users.service";
-import { SearchQueryDTO } from "src/common/dto/search-query.dto";
+import { SearchQueryDTO } from "../../common/dto/search-query.dto";
+import { PaginatedOrders } from "./dto/paginated-order.dto";
 export declare class OrdersService {
     private readonly orderModel;
     private readonly productService;
     private readonly userService;
     private readonly logger;
     constructor(orderModel: Model<Order>, productService: ProductsService, userService: UsersService);
-    createOrder(createOrderDTO: CreateOrderDTO): Promise<Order>;
-    findAllOrders(searchQuery?: SearchQueryDTO): Promise<{
-        orders: OrderInfo[];
-        pageNumber: number;
-        totalElems: number;
-        totalPages: number;
-    }>;
-    countDocs(options?: any): Promise<number>;
+    createOrder(createOrderDTO: CreateOrderDTO): Promise<OriginalOrderInfo>;
+    findAllOrders(searchQuery?: SearchQueryDTO): Promise<PaginatedOrders>;
+    countDocs(options?: RootFilterQuery<Order>): Promise<number>;
     findById(id: string): Promise<OrderInfo>;
     findOrdersForUser(userId: string, searchQuery?: SearchQueryDTO): Promise<{
-        orders: OrderInfo[];
+        orders: OriginalOrderInfo[];
         pageNumber: number;
         totalElems: number;
         totalPages: number;
     }>;
-    addProductOrder(orderId: string, createProductOrderDTO: CreateProductOrderDTO): Promise<OrderInfo>;
-    updateProductOrder(orderId: string, productId: string, updateProductOrderDTO: UpdateProductOrderDTO): Promise<OrderInfo>;
-    deleteOrder(orderId: string): Promise<Order>;
-    deleteProductOrder(orderId: string, productId: string): Promise<OrderInfo>;
+    addProductOrder(orderId: string, createProductOrderDTO: CreateProductOrderDTO): Promise<OriginalOrderInfo>;
+    updateProductOrder(orderId: string, productId: string, quantity: number): Promise<OrderInfo>;
+    deleteOrder(orderId: string): Promise<Omit<Order, "originalProductOrders" | "status" | "totalPrice">>;
+    deleteProductOrder(orderId: string, productId: string): Promise<OriginalOrderInfo>;
     getOrderProcessingDetails(orderId: string): Promise<ProductOrderProcessingDetails[]>;
-    validateOrder(orderId: string): Promise<{
-        productsDetail: any[];
-        totalPrice: number;
-    }>;
-    validateOrderWithAveragePrice(orderId: string): Promise<{
-        productsDetail: any[];
-        totalPrice: number;
-    }>;
+    refuseOrder(orderId: string): Promise<OrderInfo>;
+    validateOrder(orderId: string): Promise<ValidatedOrderInfo>;
+    validateOrderWithAveragePrice(orderId: string): Promise<ValidatedOrderInfo>;
     changeProductOrderPrice(orderId: string, productId: string, productOrderPriceDTO: ProductOrderPriceDTO): Promise<{
         productDetails: import("./orders.schema").ProductOrder;
         totalPrice: number;

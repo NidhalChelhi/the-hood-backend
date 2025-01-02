@@ -18,6 +18,7 @@ const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const update_user_dto_1 = require("./dto/update-user.dto");
 const roles_decorator_1 = require("../../common/decorators/roles.decorator");
+const user_query_dto_1 = require("./dto/user-query.dto");
 let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
@@ -25,8 +26,8 @@ let UsersController = class UsersController {
     async create(createUserDTO) {
         return this.usersService.createUser(createUserDTO);
     }
-    async findAll() {
-        return this.usersService.findAll();
+    async findAll(serachQuery) {
+        return this.usersService.findAll(serachQuery);
     }
     async findOne(id) {
         const user = await this.usersService.findOneById(id);
@@ -55,8 +56,9 @@ __decorate([
 __decorate([
     (0, roles_decorator_1.Roles)("admin"),
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [user_query_dto_1.UserQueryDTO]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findAll", null);
 __decorate([

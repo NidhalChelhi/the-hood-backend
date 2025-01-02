@@ -28,8 +28,4 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], SearchQueryDTO.prototype, "page", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SearchQueryDTO.prototype, "pointSort", void 0);
 //# sourceMappingURL=search-query.dto.js.map

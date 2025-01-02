@@ -8,7 +8,6 @@ import {
 import { User ,UserSchema } from "../modules/users/user.schema";
 import { UserRole } from "../common/enums/roles.enum";
 import { ProductSchema, Product } from "../modules/products/product.schema";
-import { OrderStatus } from "../common/enums/order-status.enum";
 
 dotenv.config();
 
@@ -38,17 +37,28 @@ async function seedOrder() {
                 {
                     productId : products[0]._id,
                     quantity : 30,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[1]._id,
                     quantity : 10,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[2]._id,
                     quantity : 5,
-                    status : OrderStatus.Pending,
+                },
+            ],
+            originalProductOrders : [
+                {
+                    productId : products[0]._id,
+                    quantity : 30,
+                },
+                {
+                    productId : products[1]._id,
+                    quantity : 10,
+                },
+                {
+                    productId : products[2]._id,
+                    quantity : 5,
                 },
             ],
             totalPrice : 0,
@@ -59,17 +69,28 @@ async function seedOrder() {
                 {
                     productId : products[2]._id,
                     quantity : 5,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[3]._id,
                     quantity : 10,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[1]._id,
                     quantity : 25,
-                    status : OrderStatus.Pending,
+                },
+            ],
+            originalProductOrders : [
+                {
+                    productId : products[2]._id,
+                    quantity : 5,
+                },
+                {
+                    productId : products[3]._id,
+                    quantity : 10,
+                },
+                {
+                    productId : products[1]._id,
+                    quantity : 25,
                 },
             ],
             totalPrice : 0,
@@ -80,17 +101,28 @@ async function seedOrder() {
                 {
                     productId : products[0]._id,
                     quantity : 10,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[1]._id,
                     quantity : 20,
-                    status : OrderStatus.Pending,
                 },
                 {
                     productId : products[3]._id,
                     quantity : 50,
-                    status : OrderStatus.Pending,
+                },
+            ],
+            originalProductOrders : [
+                {
+                    productId : products[0]._id,
+                    quantity : 10,
+                },
+                {
+                    productId : products[1]._id,
+                    quantity : 20,
+                },
+                {
+                    productId : products[3]._id,
+                    quantity : 50,
                 },
             ],
             totalPrice : 0,

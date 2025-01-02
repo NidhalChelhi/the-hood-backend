@@ -7,7 +7,6 @@ const orders_schema_1 = require("../modules/orders/orders.schema");
 const user_schema_1 = require("../modules/users/user.schema");
 const roles_enum_1 = require("../common/enums/roles.enum");
 const product_schema_1 = require("../modules/products/product.schema");
-const order_status_enum_1 = require("../common/enums/order-status.enum");
 dotenv.config();
 async function seedOrder() {
     if (!process.env.MONGO_URI) {
@@ -29,17 +28,28 @@ async function seedOrder() {
                     {
                         productId: products[0]._id,
                         quantity: 30,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[1]._id,
                         quantity: 10,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[2]._id,
                         quantity: 5,
-                        status: order_status_enum_1.OrderStatus.Pending,
+                    },
+                ],
+                originalProductOrders: [
+                    {
+                        productId: products[0]._id,
+                        quantity: 30,
+                    },
+                    {
+                        productId: products[1]._id,
+                        quantity: 10,
+                    },
+                    {
+                        productId: products[2]._id,
+                        quantity: 5,
                     },
                 ],
                 totalPrice: 0,
@@ -50,17 +60,28 @@ async function seedOrder() {
                     {
                         productId: products[2]._id,
                         quantity: 5,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[3]._id,
                         quantity: 10,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[1]._id,
                         quantity: 25,
-                        status: order_status_enum_1.OrderStatus.Pending,
+                    },
+                ],
+                originalProductOrders: [
+                    {
+                        productId: products[2]._id,
+                        quantity: 5,
+                    },
+                    {
+                        productId: products[3]._id,
+                        quantity: 10,
+                    },
+                    {
+                        productId: products[1]._id,
+                        quantity: 25,
                     },
                 ],
                 totalPrice: 0,
@@ -71,17 +92,28 @@ async function seedOrder() {
                     {
                         productId: products[0]._id,
                         quantity: 10,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[1]._id,
                         quantity: 20,
-                        status: order_status_enum_1.OrderStatus.Pending,
                     },
                     {
                         productId: products[3]._id,
                         quantity: 50,
-                        status: order_status_enum_1.OrderStatus.Pending,
+                    },
+                ],
+                originalProductOrders: [
+                    {
+                        productId: products[0]._id,
+                        quantity: 10,
+                    },
+                    {
+                        productId: products[1]._id,
+                        quantity: 20,
+                    },
+                    {
+                        productId: products[3]._id,
+                        quantity: 50,
                     },
                 ],
                 totalPrice: 0,

@@ -8,33 +8,22 @@ import { SearchQueryDTO } from "../../common/dto/search-query.dto";
 export declare class OrdersController {
     private readonly orderService;
     constructor(orderService: OrdersService);
-    create(createOrderDTO: CreateOrderDTO): Promise<import("./orders.schema").Order>;
-    findAll(queryParams: SearchQueryDTO): Promise<{
-        orders: import("./types").OrderInfo[];
-        pageNumber: number;
-        totalElems: number;
-        totalPages: number;
-    }>;
+    create(createOrderDTO: CreateOrderDTO): Promise<import("./types").OriginalOrderInfo>;
+    findAll(queryParams: SearchQueryDTO): Promise<import("./dto/paginated-order.dto").PaginatedOrders>;
     findById(id: string): Promise<import("./types").OrderInfo>;
     findAllForUser(req: any, queryParams: SearchQueryDTO): Promise<{
-        orders: import("./types").OrderInfo[];
+        orders: import("./types").OriginalOrderInfo[];
         pageNumber: number;
         totalElems: number;
         totalPages: number;
     }>;
-    addProductOrder(id: string, createProductOrderDTO: CreateProductOrderDTO): Promise<import("./types").OrderInfo>;
+    addProductOrder(id: string, createProductOrderDTO: CreateProductOrderDTO): Promise<import("./types").OriginalOrderInfo>;
     updateProductOrder(id: string, product: ProductQueryDTO, updateProductOrderDTO: UpdateProductOrderDTO): Promise<import("./types").OrderInfo>;
-    deleteProductOrder(id: string, product: ProductQueryDTO): Promise<import("./types").OrderInfo>;
-    deleteOrder(id: string): Promise<import("./orders.schema").Order>;
+    deleteProductOrder(id: string, product: ProductQueryDTO): Promise<import("./types").OriginalOrderInfo>;
+    deleteOrder(id: string): Promise<Omit<import("./orders.schema").Order, "totalPrice" | "originalProductOrders" | "status">>;
     getProcessingDetails(id: string): Promise<import("./types").ProductOrderProcessingDetails[]>;
-    validateOrder(id: string): Promise<{
-        productsDetail: any[];
-        totalPrice: number;
-    }>;
-    validateOrderAveragePrice(id: string): Promise<{
-        productsDetail: any[];
-        totalPrice: number;
-    }>;
+    validateOrder(id: string): Promise<import("./types").ValidatedOrderInfo>;
+    validateOrderAveragePrice(id: string): Promise<import("./types").ValidatedOrderInfo>;
     changeProductOrderPrice(id: string, product: ProductQueryDTO, productOrderPriceDTO: ProductOrderPriceDTO): Promise<{
         productDetails: import("./orders.schema").ProductOrder;
         totalPrice: number;

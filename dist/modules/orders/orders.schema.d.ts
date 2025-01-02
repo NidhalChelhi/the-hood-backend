@@ -35,14 +35,13 @@ export declare class ProductOrder extends Document {
     productId: Types.ObjectId;
     quantity: number;
     productOrderInfo: ProductOrderBatchesInfo;
-    status: OrderStatus;
 }
 export declare class Order extends Document {
     managerId: Types.ObjectId;
     productOrders: ProductOrder[];
+    originalProductOrders: ProductOrder[];
     totalPrice?: number;
-    isValidated: boolean;
-    isConfirmed: boolean;
+    status: OrderStatus;
 }
 export declare const ProductOrderSchema: import("mongoose").Schema<ProductOrder, import("mongoose").Model<ProductOrder, any, any, any, Document<unknown, any, ProductOrder> & ProductOrder & Required<{
     _id: unknown;

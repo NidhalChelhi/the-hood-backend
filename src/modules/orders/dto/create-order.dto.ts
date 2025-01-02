@@ -8,5 +8,5 @@ export class CreateOrderDTO {
 
    @Type(() => CreateProductOrderDTO)
    @IsArray()
-   productOrders : CreateProductOrderDTO[]
+   originalProductOrders : CreateProductOrderDTO[]
 }

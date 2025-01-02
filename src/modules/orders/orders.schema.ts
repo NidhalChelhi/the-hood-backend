@@ -61,8 +61,6 @@ export class ProductOrder extends Document {
     })
     productOrderInfo : ProductOrderBatchesInfo;
 
-    @Prop({ required : true, enum: Object.values(OrderStatus), default : OrderStatus.Pending})
-    status : OrderStatus;
 }
 
 @Schema({timestamps : true})
@@ -76,18 +74,21 @@ export class Order extends Document {
 
     @Prop({
         type : [ProductOrder],
-        required : true,
     })
     productOrders : ProductOrder[];
+    
+    @Prop({
+        type : [ProductOrder],
+        required : true,
+    })
+    originalProductOrders : ProductOrder[];
 
     @Prop()
     totalPrice? : number;
 
-    @Prop({default : false})
-    isValidated : boolean;
+    @Prop({ enum : Object.values(OrderStatus), default : OrderStatus.Pending})
+    status : OrderStatus;
 
-    @Prop({default : false})
-    isConfirmed : boolean;
 }
 //TODO : add validation to make sure every productOrder has a unique product ?
 export const ProductOrderSchema = SchemaFactory.createForClass(ProductOrder);

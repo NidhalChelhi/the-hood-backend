@@ -1,17 +1,20 @@
-import { Model } from "mongoose";
+import { Model, RootFilterQuery } from "mongoose";
 import { Product, SupplyBatch } from "./product.schema";
 import { CreateProductDTO } from "./dto/create-product.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
 import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
 import { NormalProductUsedBatch, PopulatedProduct } from "./types";
 import { LocationRank } from "src/common/enums/location-rank.enum";
+import { ProductQueryDTO } from "./dto/product-query.dto";
+import { PaginatedProducts } from "./dto/paginated-product.dto";
 export declare class ProductsService {
     private readonly productModel;
     private readonly supplyBatchModel;
     private readonly logger;
     constructor(productModel: Model<Product>, supplyBatchModel: Model<SupplyBatch>);
     createProduct(createProductDTO: CreateProductDTO): Promise<Product>;
-    findAllProducts(): Promise<PopulatedProduct[]>;
+    countProductDocs(options: RootFilterQuery<Product>): Promise<number>;
+    findAllProducts(productQuery: ProductQueryDTO): Promise<PaginatedProducts>;
     findProductById(id: string): Promise<PopulatedProduct>;
     updateProduct(id: string, updateProductDTO: UpdateProductDTO): Promise<Product>;
     deleteProduct(id: string): Promise<void>;

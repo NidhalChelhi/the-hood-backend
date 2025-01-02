@@ -61,12 +61,12 @@ export class OrdersController {
   async updateProductOrder(
     @Param("id") id: string,
     @Query() product: ProductQueryDTO,
-    updateProductOrderDTO: UpdateProductOrderDTO
+    @Body() updateProductOrderDTO: UpdateProductOrderDTO
   ) {
     return await this.orderService.updateProductOrder(
       id,
       product.productId,
-      updateProductOrderDTO
+      updateProductOrderDTO.quantity
     );
   }
 

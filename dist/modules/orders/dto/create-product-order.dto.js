@@ -11,11 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateProductOrderDTO = void 0;
 const class_validator_1 = require("class-validator");
-const order_status_enum_1 = require("../../../common/enums/order-status.enum");
 class CreateProductOrderDTO {
-    constructor() {
-        this.status = order_status_enum_1.OrderStatus.Pending;
-    }
 }
 exports.CreateProductOrderDTO = CreateProductOrderDTO;
 __decorate([
@@ -28,8 +24,4 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Number)
 ], CreateProductOrderDTO.prototype, "quantity", void 0);
-__decorate([
-    (0, class_validator_1.IsEnum)(Object.values(order_status_enum_1.OrderStatus)),
-    __metadata("design:type", String)
-], CreateProductOrderDTO.prototype, "status", void 0);
 //# sourceMappingURL=create-product-order.dto.js.map

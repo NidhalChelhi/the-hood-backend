@@ -2,11 +2,12 @@ import { ProductsService } from "./products.service";
 import { CreateProductDTO } from "./dto/create-product.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
 import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
+import { ProductQueryDTO } from "./dto/product-query.dto";
 export declare class ProductsController {
     private readonly productsService;
     constructor(productsService: ProductsService);
     createProduct(createProductDTO: CreateProductDTO): Promise<import("./product.schema").Product>;
-    findAllProducts(): Promise<import("./types").PopulatedProduct[]>;
+    findAllProducts(serachQuery: ProductQueryDTO): Promise<import("./dto/paginated-product.dto").PaginatedProducts>;
     findRawMaterials(): Promise<import("./types").PopulatedProduct[]>;
     findNormalProducts(): Promise<import("./types").PopulatedProduct[]>;
     getLowStockProducts(): Promise<import("./product.schema").Product[]>;

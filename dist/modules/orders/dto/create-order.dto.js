@@ -25,5 +25,5 @@ __decorate([
     (0, class_transformer_1.Type)(() => create_product_order_dto_1.CreateProductOrderDTO),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)
-], CreateOrderDTO.prototype, "productOrders", void 0);
+], CreateOrderDTO.prototype, "originalProductOrders", void 0);
 //# sourceMappingURL=create-order.dto.js.map

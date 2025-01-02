@@ -4,7 +4,8 @@ exports.OrderStatus = void 0;
 var OrderStatus;
 (function (OrderStatus) {
     OrderStatus["Pending"] = "pending";
-    OrderStatus["Accepted"] = "accepted";
     OrderStatus["Rejected"] = "rejected";
+    OrderStatus["Validated"] = "validated";
+    OrderStatus["Confirmed"] = "confirmed";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 //# sourceMappingURL=order-status.enum.js.map

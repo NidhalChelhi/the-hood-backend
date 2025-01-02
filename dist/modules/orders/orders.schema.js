@@ -87,10 +87,6 @@ __decorate([
     }),
     __metadata("design:type", ProductOrderBatchesInfo)
 ], ProductOrder.prototype, "productOrderInfo", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true, enum: Object.values(order_status_enum_1.OrderStatus), default: order_status_enum_1.OrderStatus.Pending }),
-    __metadata("design:type", String)
-], ProductOrder.prototype, "status", void 0);
 exports.ProductOrder = ProductOrder = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true, _id: false })
 ], ProductOrder);
@@ -108,22 +104,24 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({
         type: [ProductOrder],
-        required: true,
     }),
     __metadata("design:type", Array)
 ], Order.prototype, "productOrders", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [ProductOrder],
+        required: true,
+    }),
+    __metadata("design:type", Array)
+], Order.prototype, "originalProductOrders", void 0);
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", Number)
 ], Order.prototype, "totalPrice", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: false }),
-    __metadata("design:type", Boolean)
-], Order.prototype, "isValidated", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: false }),
-    __metadata("design:type", Boolean)
-], Order.prototype, "isConfirmed", void 0);
+    (0, mongoose_1.Prop)({ enum: Object.values(order_status_enum_1.OrderStatus), default: order_status_enum_1.OrderStatus.Pending }),
+    __metadata("design:type", String)
+], Order.prototype, "status", void 0);
 exports.Order = Order = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Order);
