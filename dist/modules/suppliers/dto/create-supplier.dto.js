@@ -9,34 +9,30 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SupplierSchema = exports.Supplier = void 0;
-const mongoose_1 = require("@nestjs/mongoose");
-const mongoose_2 = require("mongoose");
-let Supplier = class Supplier extends mongoose_2.Document {
-};
-exports.Supplier = Supplier;
+exports.CreateSupplierDTO = void 0;
+const class_validator_1 = require("class-validator");
+class CreateSupplierDTO {
+}
+exports.CreateSupplierDTO = CreateSupplierDTO;
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, unique: true }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], Supplier.prototype, "name", void 0);
+], CreateSupplierDTO.prototype, "name", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
-], Supplier.prototype, "contact", void 0);
+], CreateSupplierDTO.prototype, "contact", void 0);
 __decorate([
-    (0, mongoose_1.Prop)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], Supplier.prototype, "address", void 0);
+], CreateSupplierDTO.prototype, "address", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], Supplier.prototype, "isActive", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: [String] }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
-], Supplier.prototype, "products", void 0);
-exports.Supplier = Supplier = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], Supplier);
-exports.SupplierSchema = mongoose_1.SchemaFactory.createForClass(Supplier);
-//# sourceMappingURL=supplier.schema.js.map
+], CreateSupplierDTO.prototype, "products", void 0);
+//# sourceMappingURL=create-supplier.dto.js.map

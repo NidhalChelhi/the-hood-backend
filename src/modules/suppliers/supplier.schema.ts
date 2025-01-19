@@ -14,6 +14,9 @@ export class Supplier extends Document {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ type: [String] })
+  products: string[];
 }
 
 export const SupplierSchema = SchemaFactory.createForClass(Supplier);
