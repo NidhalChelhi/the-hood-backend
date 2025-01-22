@@ -282,18 +282,28 @@ let OrdersService = OrdersService_1 = class OrdersService {
     }
     async getOrderProcessingDetails(orderId) {
         try {
-            const order = await this.orderModel.findById(orderId).exec();
+            const order = await this.orderModel.findById(orderId).populate({
+                path: "managerId"
+            }).exec();
             if (!order) {
                 throw new common_1.NotFoundException(`Could not find order ${orderId}`);
             }
+            const managerRank = order.managerId.location.rank;
             const productDetails = await Promise.all(order.productOrders.map(async (productOrder) => {
                 try {
                     const product = await this.productService.findProductById(productOrder.productId.toString());
                     const totalQuantity = await this.productService.getProductStock(productOrder.productId.toString());
+                    const prices = await this.productService.getProductAveragePrice(productOrder.productId.toString());
                     const newQuantity = totalQuantity - productOrder.quantity;
                     return {
                         productName: product.name,
                         orderQuantity: productOrder.quantity,
+                        averageUnitPurchasePrice: prices.averagePurchasePrice,
+                        averageRankSellingPrice: (managerRank === location_rank_enum_1.LocationRank.Gold)
+                            ? prices.averageSellingPriceGold
+                            : (managerRank === location_rank_enum_1.LocationRank.Silver)
+                                ? prices.averageSellingPriceSilver
+                                : prices.averageSellingPriceBronze,
                         totalQuantity,
                         newQuantity: (newQuantity < 0) ? 0 : newQuantity,
                         productStatus: (newQuantity < 0)
@@ -324,6 +334,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
             order.updateOne({
                 $set: { productOrders: [] }
             });
+            order.status = order_status_enum_1.OrderStatus.Rejected;
             order.save();
             const populatedOrder = await order
                 .populate([
@@ -367,8 +378,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
             if (!order) {
                 throw new common_1.NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if (order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Validated) {
-                throw new common_1.UnauthorizedException("Order already confirmed / validated");
+            if (order.status !== order_status_enum_1.OrderStatus.Pending) {
+                throw new common_1.UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
             if (!processingDetails.every((product) => {
@@ -419,8 +430,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
             if (!order) {
                 throw new common_1.NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if (order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Validated) {
-                throw new common_1.UnauthorizedException("Order already confirmed / validated");
+            if (order.status !== order_status_enum_1.OrderStatus.Pending) {
+                throw new common_1.UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
             if (!processingDetails.every((product) => {
@@ -459,8 +470,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async changeProductOrderPrice(orderId, productId, productOrderPriceDTO) {
         try {
             const order = await this.orderModel.findById(orderId);
-            if (order.status === order_status_enum_1.OrderStatus.Confirmed) {
-                throw new common_1.UnauthorizedException("Cannot modify price for Confirmed Order");
+            if (order.status !== order_status_enum_1.OrderStatus.Validated) {
+                throw new common_1.UnauthorizedException("Order is either confirmed or has not been validated yet");
             }
             for (const productOrder of order.productOrders) {
                 if (productOrder.productId.toString() === productId) {
@@ -495,8 +506,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async confirmOrder(orderId) {
         try {
             const check = await this.findById(orderId);
-            if (check.status === order_status_enum_1.OrderStatus.Confirmed) {
-                throw new common_1.UnauthorizedException("Order already confirmed");
+            if (check.status !== order_status_enum_1.OrderStatus.Validated) {
+                throw new common_1.UnauthorizedException("Order must be validated to be confirmed");
             }
             const order = await this.orderModel
                 .findByIdAndUpdate(orderId, {
