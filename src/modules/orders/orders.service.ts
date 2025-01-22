@@ -15,6 +15,7 @@ import { LocationRank } from "../../common/enums/location-rank.enum";
 import { UsersService } from "../users/users.service";
 import { SearchQueryDTO } from "../../common/dto/search-query.dto";
 import { PaginatedOrders } from "./dto/paginated-order.dto";
+import { User } from "../users/user.schema";
 
 @Injectable()
 export class OrdersService{
@@ -282,19 +283,29 @@ export class OrdersService{
     }
     async getOrderProcessingDetails(orderId : string) : Promise<ProductOrderProcessingDetails[]>{
         try {
-            const order = await this.orderModel.findById(orderId).exec();
+            const order = await this.orderModel.findById(orderId).populate<{managerId : User}>({
+                path : "managerId"
+            }).exec();
             if(!order){
                 throw new NotFoundException(`Could not find order ${orderId}`);
             }
+            const managerRank = order.managerId.location.rank;
             const productDetails = await Promise.all(
                 order.productOrders.map(async (productOrder) => {
                     try{
                     const product = await this.productService.findProductById(productOrder.productId.toString());
                     const totalQuantity =await this.productService.getProductStock(productOrder.productId.toString());
+                    const prices = await this.productService.getProductAveragePrice(productOrder.productId.toString());
                     const newQuantity = totalQuantity - productOrder.quantity;
                         return {
                             productName : product.name,
                             orderQuantity : productOrder.quantity,
+                            averageUnitPurchasePrice :prices.averagePurchasePrice,
+                            averageRankSellingPrice : (managerRank === LocationRank.Gold) 
+                                ? prices.averageSellingPriceGold 
+                                : (managerRank === LocationRank.Silver) 
+                                    ? prices.averageSellingPriceSilver 
+                                    : prices.averageSellingPriceBronze,
                             totalQuantity,
                             newQuantity : (newQuantity < 0) ? 0 : newQuantity,
                             productStatus : (newQuantity < 0)
@@ -324,6 +335,7 @@ export class OrdersService{
             order.updateOne({
                 $set : { productOrders : []}
             })
+            order.status = OrderStatus.Rejected;
             order.save();
 
             const populatedOrder = await order
@@ -369,8 +381,8 @@ export class OrdersService{
             if(!order){
                 throw new NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if(order.status === OrderStatus.Confirmed || order.status === OrderStatus.Validated){
-                throw new UnauthorizedException("Order already confirmed / validated");
+            if(order.status !== OrderStatus.Pending){
+                throw new UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId)
             if(!processingDetails.every((product) => {
@@ -420,8 +432,8 @@ export class OrdersService{
             if(!order){
                 throw new NotFoundException(`Failed to fetch order ${orderId}`);
             }
-            if(order.status === OrderStatus.Confirmed || order.status === OrderStatus.Validated ){
-                throw new UnauthorizedException("Order already confirmed / validated");
+            if(order.status !== OrderStatus.Pending){
+                throw new UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId)
             if(!processingDetails.every((product) => {
@@ -460,8 +472,8 @@ export class OrdersService{
     async changeProductOrderPrice(orderId : string, productId : string,productOrderPriceDTO : ProductOrderPriceDTO) {
         try{
             const order = await this.orderModel.findById(orderId);
-            if(order.status === OrderStatus.Confirmed){
-                throw new UnauthorizedException("Cannot modify price for Confirmed Order");
+            if(order.status !== OrderStatus.Validated){
+                throw new UnauthorizedException("Order is either confirmed or has not been validated yet");
             }
             for( const productOrder of order.productOrders){
                 if(productOrder.productId.toString() === productId){
@@ -494,8 +506,8 @@ export class OrdersService{
     async confirmOrder(orderId : string) : Promise<OrderInfo>{
         try{
             const check = await this.findById(orderId);
-            if(check.status === OrderStatus.Confirmed){
-                throw new UnauthorizedException("Order already confirmed");
+            if(check.status !== OrderStatus.Validated){
+                throw new UnauthorizedException("Order must be validated to be confirmed");
             }
             //TODO : chcek if a product order with the same id exists, if so we add the quantity only
             const order = await this.orderModel
