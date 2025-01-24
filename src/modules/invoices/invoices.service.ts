@@ -6,6 +6,7 @@ import { Order } from '../orders/orders.schema';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UserInfo } from '../users/types';
+import { OrderStatus } from 'src/common/enums/order-status.enum';
 
 @Injectable()
 export class InvoicesService {
@@ -35,6 +36,13 @@ export class InvoicesService {
                 throw new BadRequestException(`One or more orders are already associated with another invoice`);
             }
 
+            // Check if any of the orders are not marked as Confirmed
+            const unconfirmedOrders = orders.filter(order => order.status !== OrderStatus.Confirmed);
+
+            if (unconfirmedOrders.length > 0) {
+                throw new BadRequestException(`One or more orders are not marked as Confirmed`);
+            }
+
             // Calculate total price
             const totalPrice = orders.reduce((sum, order) => sum + order.totalPrice, 0);
 
@@ -43,7 +51,16 @@ export class InvoicesService {
                 totalPrice,
             });
 
-            return await invoice.save();
+            const savedInvoice = await invoice.save();
+
+            // Update the status of the orders to Facturated
+            await this.orderModel.updateMany(
+                { _id: { $in: createInvoiceDTO.orders } },
+                { $set: { status: OrderStatus.Facturated } }
+            );
+
+            return savedInvoice;
+
         } catch (error) {
             if (error.code === 11000) {
                 throw new BadRequestException(

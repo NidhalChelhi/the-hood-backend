@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsEnum, IsOptional, IsString } from "class-validator";
+import { OrderStatus } from "../enums/order-status.enum";
 
 export class SearchQueryDTO {
     @IsString()
@@ -11,4 +12,8 @@ export class SearchQueryDTO {
 
     @IsOptional()
     page : number;
+
+    @IsOptional()
+    @IsEnum(OrderStatus)
+    status: OrderStatus;
 }

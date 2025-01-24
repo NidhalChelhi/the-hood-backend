@@ -56,6 +56,9 @@ export class OrdersService{
                 const userIds = users.map((user) => user._id);
                 options.managerId = { $in : userIds};
             }
+            if(searchQuery.status){
+                options.status = { $in : searchQuery.status};
+            }
             const query = this.orderModel
             .find(options)
             .populate<{managerId : UserInfo}>({

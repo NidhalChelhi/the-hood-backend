@@ -19,6 +19,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const invoice_schema_1 = require("./invoice.schema");
 const orders_schema_1 = require("../orders/orders.schema");
+const order_status_enum_1 = require("../../common/enums/order-status.enum");
 let InvoicesService = InvoicesService_1 = class InvoicesService {
     constructor(invoiceModel, orderModel) {
         this.invoiceModel = invoiceModel;
@@ -39,12 +40,18 @@ let InvoicesService = InvoicesService_1 = class InvoicesService {
             if (existingInvoices.length > 0) {
                 throw new common_1.BadRequestException(`One or more orders are already associated with another invoice`);
             }
+            const unconfirmedOrders = orders.filter(order => order.status !== order_status_enum_1.OrderStatus.Confirmed);
+            if (unconfirmedOrders.length > 0) {
+                throw new common_1.BadRequestException(`One or more orders are not marked as Confirmed`);
+            }
             const totalPrice = orders.reduce((sum, order) => sum + order.totalPrice, 0);
             const invoice = new this.invoiceModel({
                 ...createInvoiceDTO,
                 totalPrice,
             });
-            return await invoice.save();
+            const savedInvoice = await invoice.save();
+            await this.orderModel.updateMany({ _id: { $in: createInvoiceDTO.orders } }, { $set: { status: order_status_enum_1.OrderStatus.Facturated } });
+            return savedInvoice;
         }
         catch (error) {
             if (error.code === 11000) {

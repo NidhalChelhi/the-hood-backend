@@ -7,5 +7,6 @@ var OrderStatus;
     OrderStatus["Rejected"] = "rejected";
     OrderStatus["Validated"] = "validated";
     OrderStatus["Confirmed"] = "confirmed";
+    OrderStatus["Facturated"] = "facturated";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 //# sourceMappingURL=order-status.enum.js.map

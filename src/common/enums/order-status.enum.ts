@@ -3,4 +3,5 @@ export enum OrderStatus {
     Rejected = "rejected",
     Validated = "validated",
     Confirmed = "confirmed",
+    Facturated = "facturated",
 }
