@@ -22,12 +22,14 @@ const product_order_price_dto_1 = require("./dto/product-order-price.dto");
 const product_query_dto_1 = require("./dto/product-query.dto");
 const search_query_dto_1 = require("../../common/dto/search-query.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
+const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 let OrdersController = class OrdersController {
     constructor(orderService) {
         this.orderService = orderService;
     }
-    async create(createOrderDTO) {
-        return await this.orderService.createOrder(createOrderDTO);
+    async create(req, createOrderDTO) {
+        const userId = req.user["userId"];
+        return await this.orderService.createOrder(createOrderDTO, userId);
     }
     async findAll(queryParams) {
         return await this.orderService.findAllOrders(queryParams);
@@ -69,10 +71,12 @@ let OrdersController = class OrdersController {
 };
 exports.OrdersController = OrdersController;
 __decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_order_dto_1.CreateOrderDTO]),
+    __metadata("design:paramtypes", [Object, create_order_dto_1.CreateOrderDTO]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "create", null);
 __decorate([

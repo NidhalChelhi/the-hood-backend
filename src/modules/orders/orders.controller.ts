@@ -9,6 +9,7 @@ import {
   Put,
   Query,
   Req,
+  UseGuards,
 } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
 import { CreateOrderDTO } from "./dto/create-order.dto";
@@ -17,16 +18,20 @@ import { UpdateProductOrderDTO } from "./dto/update-product-order.dto";
 import { ProductOrderPriceDTO } from "./dto/product-order-price.dto";
 import { ProductQueryDTO } from "./dto/product-query.dto";
 import { SearchQueryDTO } from "../../common/dto/search-query.dto";
+import { Request } from "express";
 import { Public } from "src/common/decorators/public.decorator";
+import { JwtAuthGuard } from "src/common/guards/jwt-auth.guard";
 
 @Public()
 @Controller("orders")
 export class OrdersController {
   constructor(private readonly orderService: OrdersService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createOrderDTO: CreateOrderDTO) {
-    return await this.orderService.createOrder(createOrderDTO);
+  async create(@Req() req : Request, @Body() createOrderDTO: CreateOrderDTO) {
+    const userId = req.user["userId"];
+    return await this.orderService.createOrder(createOrderDTO, userId);
   }
 
   @Get()

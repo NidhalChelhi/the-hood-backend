@@ -26,9 +26,16 @@ export class OrdersService{
         private readonly userService : UsersService
     ){}
 
-    async createOrder(createOrderDTO : CreateOrderDTO) : Promise<OriginalOrderInfo>{
+    async createOrder(createOrderDTO : CreateOrderDTO, managerId : string) : Promise<OriginalOrderInfo>{
         try {
-            const order = new this.orderModel(createOrderDTO);
+            if(!managerId){
+                throw new BadRequestException("Unvalid User");
+            }
+            const createUserOrderDTO = {
+                managerId,
+                ...createOrderDTO
+            }
+            const order = new this.orderModel(createUserOrderDTO);
             order.productOrders = order.originalProductOrders;
             const savedOrder = await order.save();
             const populatedOrder = await savedOrder
@@ -55,9 +62,6 @@ export class OrdersService{
                 const users = await this.userService.findLikeUserName(searchQuery.name);
                 const userIds = users.map((user) => user._id);
                 options.managerId = { $in : userIds};
-            }
-            if(searchQuery.status){
-                options.status = { $in : searchQuery.status};
             }
             const query = this.orderModel
             .find(options)
@@ -217,22 +221,13 @@ export class OrdersService{
             if(check.status !== OrderStatus.Pending){
                 throw new UnauthorizedException("Cannot modify Non Pending Order");
             }
-            const order = await this.orderModel
-            .findOneAndUpdate({_id : orderId, "productOrders.productId" : productId}, {
-                    $set : {"productOrders.$.quantity" : quantity},
-                },
-                {new : true, runValidators : true}
-            )
-            .populate<{managerId : UserInfo}>({
-                path : "managerId",
-                select : "username phoneNumber location"
-            })
-            .populate<{ productOrders : NamedProductOrder[]}>({
-                path : "productOrders",
-                select : "name",
-            })
-            .exec();
-            return order as OrderInfo;
+            const order = await this.orderModel.findById(orderId).exec();
+            const po = order.productOrders.find((productOrder) => productOrder.productId.toString() === productId);
+            if(po){
+            po.quantity = quantity;
+            }
+            order.save();
+            return {} as OrderInfo;
         }catch(error){
             this.logger.error(`Error updating product order : ${error}`);
             throw new BadRequestException(`Failed to update product order : ${error.message}`)

@@ -17,7 +17,12 @@ export type ProductOrderProcessingDetails = {
     orderQuantity: number;
     totalQuantity: number;
     newQuantity: number;
+    estimatedPrice: number;
     productStatus: ProductAvailability;
+};
+export type OrderDetails = {
+    productDetails: ProductOrderProcessingDetails[];
+    totalPrice: number;
 };
 export type ValidatedOrderInfo = {
     productsDetails: ProductOrderBatchesInfo[];

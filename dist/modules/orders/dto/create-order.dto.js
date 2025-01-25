@@ -17,11 +17,6 @@ class CreateOrderDTO {
 }
 exports.CreateOrderDTO = CreateOrderDTO;
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateOrderDTO.prototype, "managerId", void 0);
-__decorate([
     (0, class_transformer_1.Type)(() => create_product_order_dto_1.CreateProductOrderDTO),
     (0, class_validator_1.IsArray)(),
     __metadata("design:type", Array)

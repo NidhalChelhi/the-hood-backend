@@ -30,9 +30,16 @@ let OrdersService = OrdersService_1 = class OrdersService {
         this.userService = userService;
         this.logger = new common_1.Logger(OrdersService_1.name);
     }
-    async createOrder(createOrderDTO) {
+    async createOrder(createOrderDTO, managerId) {
         try {
-            const order = new this.orderModel(createOrderDTO);
+            if (!managerId) {
+                throw new common_1.BadRequestException("Unvalid User");
+            }
+            const createUserOrderDTO = {
+                managerId,
+                ...createOrderDTO
+            };
+            const order = new this.orderModel(createUserOrderDTO);
             order.productOrders = order.originalProductOrders;
             const savedOrder = await order.save();
             const populatedOrder = await savedOrder
@@ -60,9 +67,6 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 const users = await this.userService.findLikeUserName(searchQuery.name);
                 const userIds = users.map((user) => user._id);
                 options.managerId = { $in: userIds };
-            }
-            if (searchQuery.status) {
-                options.status = { $in: searchQuery.status };
             }
             const query = this.orderModel
                 .find(options)
@@ -217,20 +221,14 @@ let OrdersService = OrdersService_1 = class OrdersService {
             if (check.status !== order_status_enum_1.OrderStatus.Pending) {
                 throw new common_1.UnauthorizedException("Cannot modify Non Pending Order");
             }
-            const order = await this.orderModel
-                .findOneAndUpdate({ _id: orderId, "productOrders.productId": productId }, {
-                $set: { "productOrders.$.quantity": quantity },
-            }, { new: true, runValidators: true })
-                .populate({
-                path: "managerId",
-                select: "username phoneNumber location"
-            })
-                .populate({
-                path: "productOrders",
-                select: "name",
-            })
-                .exec();
-            return order;
+            const order = await this.orderModel.findById(orderId).exec();
+            const po = order.productOrders.find((productOrder) => productOrder.productId.toString() === productId);
+            console.log(po);
+            if (po) {
+                po.quantity = quantity;
+            }
+            order.save();
+            return {};
         }
         catch (error) {
             this.logger.error(`Error updating product order : ${error}`);
@@ -301,12 +299,12 @@ let OrdersService = OrdersService_1 = class OrdersService {
                     return {
                         productName: product.name,
                         orderQuantity: productOrder.quantity,
-                        averageUnitPurchasePrice: prices.averagePurchasePrice,
-                        averageRankSellingPrice: (managerRank === location_rank_enum_1.LocationRank.Gold)
+                        averageUnitPurchasePrice: prices.averagePurchasePrice || 0,
+                        averageRankSellingPrice: ((managerRank === location_rank_enum_1.LocationRank.Gold)
                             ? prices.averageSellingPriceGold
                             : (managerRank === location_rank_enum_1.LocationRank.Silver)
                                 ? prices.averageSellingPriceSilver
-                                : prices.averageSellingPriceBronze,
+                                : prices.averageSellingPriceBronze) || 0,
                         totalQuantity,
                         newQuantity: (newQuantity < 0) ? 0 : newQuantity,
                         productStatus: (newQuantity < 0)
@@ -314,6 +312,11 @@ let OrdersService = OrdersService_1 = class OrdersService {
                             : (newQuantity <= product.stockLimit)
                                 ? product_availabilty_enum_1.ProductAvailability.BelowStockLimit
                                 : product_availabilty_enum_1.ProductAvailability.Available,
+                        estimatedPrice: productOrder.quantity * ((managerRank === location_rank_enum_1.LocationRank.Gold)
+                            ? prices.averageSellingPriceGold
+                            : (managerRank === location_rank_enum_1.LocationRank.Silver)
+                                ? prices.averageSellingPriceSilver
+                                : prices.averageSellingPriceBronze) || 0,
                     };
                 }
                 catch (error) {
@@ -321,7 +324,11 @@ let OrdersService = OrdersService_1 = class OrdersService {
                     throw new common_1.NotFoundException(`Failed to fetch productc ${productOrder.productId} : ${error.message}`);
                 }
             }));
-            return productDetails;
+            const totalPrice = productDetails.reduce((acc, item) => acc + item.estimatedPrice, 0);
+            return {
+                productDetails,
+                totalPrice
+            };
         }
         catch (error) {
             this.logger.error(`Error fetching order processing details: ${error.message}`);
@@ -385,7 +392,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 throw new common_1.UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
-            if (!processingDetails.every((product) => {
+            if (!processingDetails.productDetails.every((product) => {
                 return product.productStatus !== product_availabilty_enum_1.ProductAvailability.NotAvailable;
             })) {
                 this.logger.error("Called Validate Order with Unsufficient quantites for the product list");
@@ -437,7 +444,7 @@ let OrdersService = OrdersService_1 = class OrdersService {
                 throw new common_1.UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId);
-            if (!processingDetails.every((product) => {
+            if (!processingDetails.productDetails.every((product) => {
                 return product.productStatus !== product_availabilty_enum_1.ProductAvailability.NotAvailable;
             })) {
                 this.logger.error("Called Validate Order with Unsufficient quantites for the product list");

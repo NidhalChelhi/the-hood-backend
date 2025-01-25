@@ -26,11 +26,11 @@ export class AuthCompositeGuard implements CanActivate {
     ]);
 
     if (isPublic) {
-      this.logger.debug("Public route accessed.");
       return true;
     }
 
     const jwtValid = await this.jwtAuthGuard.canActivate(context);
+    console.log("Jina lena ??");
     if (!jwtValid) return false;
 
     return this.rolesGuard.canActivate(context);
