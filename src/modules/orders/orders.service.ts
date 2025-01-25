@@ -80,6 +80,9 @@ export class OrdersService{
                     "createdAt" : sortCriteria
                 })
             }
+            if(searchQuery.status){
+                options.status = { $in : searchQuery.status};
+            }
             const pageNumber = Math.max((searchQuery.page || 1), 1);
             const limit = 10;
             const totalElems = await this.countDocs(options);
