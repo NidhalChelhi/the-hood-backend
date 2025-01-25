@@ -63,6 +63,9 @@ export class OrdersService{
                 const userIds = users.map((user) => user._id);
                 options.managerId = { $in : userIds};
             }
+           if(searchQuery.status){
+                options.status = { $in : searchQuery.status};
+            }
             const query = this.orderModel
             .find(options)
             .populate<{managerId : UserInfo}>({
@@ -79,9 +82,6 @@ export class OrdersService{
                 query.sort({
                     "createdAt" : sortCriteria
                 })
-            }
-            if(searchQuery.status){
-                options.status = { $in : searchQuery.status};
             }
             const pageNumber = Math.max((searchQuery.page || 1), 1);
             const limit = 10;
