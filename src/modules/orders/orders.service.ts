@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Order, ProductOrderBatchesInfo } from "./orders.schema";
 import { Model, RootFilterQuery, Types } from "mongoose";
 import { CreateOrderDTO } from "./dto/create-order.dto";
-import { NamedProductOrder, OrderInfo, OriginalOrderInfo, ProductOrderProcessingDetails, ValidatedOrderInfo } from "./types";
+import { NamedProductOrder, OrderDetails, OrderInfo, OriginalOrderInfo, ProductOrderProcessingDetails, ValidatedOrderInfo } from "./types";
 import { UserInfo } from "../users/types";
 import { CreateProductOrderDTO } from "./dto/create-product-order.dto";
 import { OrderStatus } from "../../common/enums/order-status.enum";
@@ -284,7 +284,7 @@ export class OrdersService{
             throw new BadRequestException(`Failed to delete product order : ${error.message}`)
         }
     }
-    async getOrderProcessingDetails(orderId : string) : Promise<ProductOrderProcessingDetails[]>{
+    async getOrderProcessingDetails(orderId : string) : Promise<OrderDetails>{
         try {
             const order = await this.orderModel.findById(orderId).populate<{managerId : User}>({
                 path : "managerId"
@@ -303,12 +303,12 @@ export class OrdersService{
                         return {
                             productName : product.name,
                             orderQuantity : productOrder.quantity,
-                            averageUnitPurchasePrice :prices.averagePurchasePrice,
-                            averageRankSellingPrice : (managerRank === LocationRank.Gold) 
+                            averageUnitPurchasePrice :prices.averagePurchasePrice || 0,
+                            averageRankSellingPrice : ((managerRank === LocationRank.Gold) 
                                 ? prices.averageSellingPriceGold 
                                 : (managerRank === LocationRank.Silver) 
                                     ? prices.averageSellingPriceSilver 
-                                    : prices.averageSellingPriceBronze,
+                                    : prices.averageSellingPriceBronze) || 0,
                             totalQuantity,
                             newQuantity : (newQuantity < 0) ? 0 : newQuantity,
                             productStatus : (newQuantity < 0)
@@ -316,6 +316,11 @@ export class OrdersService{
                                 : (newQuantity <= product.stockLimit)
                                     ? ProductAvailability.BelowStockLimit
                                     : ProductAvailability.Available ,
+                            estimatedPrice : productOrder.quantity * ((managerRank === LocationRank.Gold) 
+                                ? prices.averageSellingPriceGold 
+                                : (managerRank === LocationRank.Silver) 
+                                    ? prices.averageSellingPriceSilver 
+                                    : prices.averageSellingPriceBronze) || 0,
                         } as ProductOrderProcessingDetails;
                     }catch(error){
                         this.logger.error(`Error Fetching Product ${productOrder.productId} : ${error.message}`);
@@ -323,7 +328,11 @@ export class OrdersService{
                     }
                 })
             );
-            return productDetails;
+            const totalPrice = productDetails.reduce((acc, item) => acc + item.estimatedPrice, 0);
+            return {
+                productDetails,
+                totalPrice
+            };
         }catch(error){
             this.logger.error(`Error fetching order processing details: ${error.message}`);
             throw new BadRequestException(`Failed to fetch order processing details : ${error.message}`)
@@ -388,7 +397,7 @@ export class OrdersService{
                 throw new UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId)
-            if(!processingDetails.every((product) => {
+            if(!processingDetails.productDetails.every((product) => {
                 return product.productStatus !== ProductAvailability.NotAvailable
             })){
                 this.logger.error("Called Validate Order with Unsufficient quantites for the product list");
@@ -439,7 +448,7 @@ export class OrdersService{
                 throw new UnauthorizedException("Order must be pending to validate it");
             }
             const processingDetails = await this.getOrderProcessingDetails(orderId)
-            if(!processingDetails.every((product) => {
+            if(!processingDetails.productDetails.every((product) => {
                 return product.productStatus !== ProductAvailability.NotAvailable
             })){
                 this.logger.error("Called Validate Order with Unsufficient quantites for the product list");
