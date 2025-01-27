@@ -240,8 +240,8 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async deleteOrder(orderId) {
         try {
             const check = await this.findById(orderId);
-            if (check.status === order_status_enum_1.OrderStatus.Confirmed || check.status === order_status_enum_1.OrderStatus.Validated) {
-                throw new common_1.UnauthorizedException("Cannot delete Validated / Confirmed Order");
+            if (check.status === order_status_enum_1.OrderStatus.Confirmed || check.status === order_status_enum_1.OrderStatus.Validated || check.status === order_status_enum_1.OrderStatus.Facturated) {
+                throw new common_1.UnauthorizedException("Cannot delete Approved Order");
             }
             const order = await this.orderModel.findByIdAndDelete(orderId).exec();
             if (!order) {
@@ -340,6 +340,9 @@ let OrdersService = OrdersService_1 = class OrdersService {
     async refuseOrder(orderId) {
         try {
             const order = await this.orderModel.findById(orderId);
+            if (order.status === order_status_enum_1.OrderStatus.Validated || order.status === order_status_enum_1.OrderStatus.Confirmed || order.status === order_status_enum_1.OrderStatus.Facturated) {
+                throw new common_1.UnauthorizedException("Cannot cancel Approved Order");
+            }
             for (const productOrder of order.originalProductOrders) {
                 productOrder.quantity = 0;
             }

@@ -120,4 +120,9 @@ export class OrdersController {
   async confirmOrder(@Param("id") id: string) {
     return await this.orderService.confirmOrder(id);
   }
+
+  @Patch("cancel/:id")
+  async cancelOrder(@Param("id") id : string){
+    return await this.orderService.refuseOrder(id);
+  }
 }

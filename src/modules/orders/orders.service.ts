@@ -239,8 +239,8 @@ export class OrdersService{
     async deleteOrder(orderId : string) : Promise<Omit<Order , "originalProductOrders" | "status" | "totalPrice" >>{
         try {
             const check = await this.findById(orderId);
-            if(check.status === OrderStatus.Confirmed || check.status === OrderStatus.Validated){
-                throw new UnauthorizedException("Cannot delete Validated / Confirmed Order");
+            if(check.status === OrderStatus.Confirmed || check.status === OrderStatus.Validated || check.status === OrderStatus.Facturated){
+                throw new UnauthorizedException("Cannot delete Approved Order");
             }
             const order = await this.orderModel.findByIdAndDelete(orderId).exec();
             if(!order){
@@ -339,6 +339,9 @@ export class OrdersService{
     async refuseOrder(orderId : string) : Promise<OrderInfo> {
         try{
             const order = await this.orderModel.findById(orderId);
+            if(order.status === OrderStatus.Validated || order.status === OrderStatus.Confirmed || order.status === OrderStatus.Facturated){
+                throw new UnauthorizedException("Cannot cancel Approved Order");
+            }
             for(const productOrder of order.originalProductOrders){
                 productOrder.quantity = 0;
             }

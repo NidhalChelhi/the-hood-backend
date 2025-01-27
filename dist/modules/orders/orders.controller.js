@@ -68,6 +68,9 @@ let OrdersController = class OrdersController {
     async confirmOrder(id) {
         return await this.orderService.confirmOrder(id);
     }
+    async cancelOrder(id) {
+        return await this.orderService.refuseOrder(id);
+    }
 };
 exports.OrdersController = OrdersController;
 __decorate([
@@ -172,6 +175,13 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "confirmOrder", null);
+__decorate([
+    (0, common_1.Patch)("cancel/:id"),
+    __param(0, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "cancelOrder", null);
 exports.OrdersController = OrdersController = __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Controller)("orders"),

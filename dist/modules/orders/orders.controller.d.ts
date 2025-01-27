@@ -30,4 +30,5 @@ export declare class OrdersController {
         totalPrice: number;
     }>;
     confirmOrder(id: string): Promise<import("./types").OrderInfo>;
+    cancelOrder(id: string): Promise<import("./types").OrderInfo>;
 }
