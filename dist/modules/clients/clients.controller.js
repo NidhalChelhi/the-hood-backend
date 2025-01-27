@@ -17,8 +17,8 @@ const common_1 = require("@nestjs/common");
 const clients_service_1 = require("./clients.service");
 const create_client_dto_1 = require("./dto/create-client.dto");
 const update_client_dto_1 = require("./dto/update-client.dto");
-const roles_decorator_1 = require("../../common/decorators/roles.decorator");
 const client_query_dto_1 = require("./dto/client-query.dto");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 let ClientsController = class ClientsController {
     constructor(clientsService) {
         this.clientsService = clientsService;
@@ -88,7 +88,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ClientsController.prototype, "addPoints", null);
 exports.ClientsController = ClientsController = __decorate([
-    (0, roles_decorator_1.Roles)("restaurant_manager", "admin"),
+    (0, public_decorator_1.Public)(),
     (0, common_1.Controller)("clients"),
     __metadata("design:paramtypes", [clients_service_1.ClientsService])
 ], ClientsController);

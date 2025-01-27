@@ -13,8 +13,10 @@ import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
 import { Roles } from "../../common/decorators/roles.decorator";
 import { ClientQueryDTO } from "./dto/client-query.dto";
+import { Public } from "src/common/decorators/public.decorator";
 
-@Roles("restaurant_manager", "admin")
+//@Roles("restaurant_manager", "admin")
+@Public()
 @Controller("clients")
 export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
