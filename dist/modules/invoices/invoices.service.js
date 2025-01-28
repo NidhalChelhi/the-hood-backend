@@ -20,10 +20,12 @@ const mongoose_2 = require("mongoose");
 const invoice_schema_1 = require("./invoice.schema");
 const orders_schema_1 = require("../orders/orders.schema");
 const order_status_enum_1 = require("../../common/enums/order-status.enum");
+const users_service_1 = require("../users/users.service");
 let InvoicesService = InvoicesService_1 = class InvoicesService {
-    constructor(invoiceModel, orderModel) {
+    constructor(invoiceModel, orderModel, userService) {
         this.invoiceModel = invoiceModel;
         this.orderModel = orderModel;
+        this.userService = userService;
         this.logger = new common_1.Logger(InvoicesService_1.name);
     }
     async create(createInvoiceDTO) {
@@ -59,6 +61,41 @@ let InvoicesService = InvoicesService_1 = class InvoicesService {
             }
             this.logger.error('Error creating invoice:', error.message);
             throw new common_1.BadRequestException(`Failed to create invoice: ${error.message}`);
+        }
+    }
+    async findByManagerName(managerName) {
+        if (!managerName || managerName.trim() === '') {
+            throw new common_1.BadRequestException(`Manager name cannot be empty.`);
+        }
+        try {
+            const users = await this.userService.findLikeUserName(managerName);
+            if (!users.length) {
+                throw new common_1.BadRequestException(`No users found with the name '${managerName}'`);
+            }
+            const managerIds = users.map(user => user._id);
+            const invoices = await this.invoiceModel
+                .find()
+                .populate({
+                path: 'orders',
+                model: 'Order',
+                match: { managerId: { $in: managerIds } },
+                select: 'managerId productOrders totalPrice status createdAt updatedAt',
+                populate: {
+                    path: 'managerId',
+                    model: 'User',
+                    select: 'username phoneNumber location'
+                }
+            })
+                .exec();
+            const filteredInvoices = invoices.filter(invoice => invoice.orders.length > 0);
+            if (!filteredInvoices.length) {
+                throw new common_1.BadRequestException(`No invoices found for manager '${managerName}'`);
+            }
+            return filteredInvoices;
+        }
+        catch (error) {
+            this.logger.error(`Error fetching invoices for manager '${managerName}':`, error.message);
+            throw new common_1.BadRequestException(`Failed to fetch invoices: ${error.message}`);
         }
     }
     async findAll() {
@@ -155,6 +192,7 @@ exports.InvoicesService = InvoicesService = InvoicesService_1 = __decorate([
     __param(0, (0, mongoose_1.InjectModel)(invoice_schema_1.Invoice.name)),
     __param(1, (0, mongoose_1.InjectModel)(orders_schema_1.Order.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        users_service_1.UsersService])
 ], InvoicesService);
 //# sourceMappingURL=invoices.service.js.map

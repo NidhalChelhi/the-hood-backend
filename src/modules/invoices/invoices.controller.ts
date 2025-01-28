@@ -19,6 +19,11 @@ export class InvoicesController {
     return this.invoicesService.findAll();
   }
 
+  @Get("manager/:name")
+  findByManagerName(@Param('name') id: string) {
+    return this.invoicesService.findByManagerName(id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.invoicesService.findOne(id);

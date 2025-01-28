@@ -7,6 +7,7 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { UserInfo } from '../users/types';
 import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class InvoicesService {
@@ -15,6 +16,8 @@ export class InvoicesService {
     constructor(
         @InjectModel(Invoice.name) private readonly invoiceModel: Model<Invoice>,
         @InjectModel(Order.name) private readonly orderModel: Model<Order>, // Inject Order model
+                private readonly userService : UsersService
+        
     ) { }
 
     async create(createInvoiceDTO: CreateInvoiceDto): Promise<Invoice> {
@@ -73,6 +76,51 @@ export class InvoicesService {
             );
         }
     }
+
+    async findByManagerName(managerName: string): Promise<Invoice[]> {
+        if (!managerName || managerName.trim() === '') {
+            throw new BadRequestException(`Manager name cannot be empty.`);
+        }
+    
+        try {
+            // Step 1: Find all users whose username matches the manager name
+            const users = await this.userService.findLikeUserName(managerName);
+            if (!users.length) {
+                throw new BadRequestException(`No users found with the name '${managerName}'`);
+            }
+    
+            const managerIds = users.map(user => user._id);
+    
+            // Step 2: Find invoices where at least one order belongs to these manager IDs
+            const invoices = await this.invoiceModel
+                .find()
+                .populate({
+                    path: 'orders',
+                    model: 'Order',
+                    match: { managerId: { $in: managerIds } },  // Filters orders by manager IDs
+                    select: 'managerId productOrders totalPrice status createdAt updatedAt',
+                    populate: {
+                        path: 'managerId',
+                        model: 'User',
+                        select: 'username phoneNumber location'
+                    }
+                })
+                .exec();
+    
+            // Step 3: Filter invoices that contain at least one matching order
+            const filteredInvoices = invoices.filter(invoice => invoice.orders.length > 0);
+    
+            if (!filteredInvoices.length) {
+                throw new BadRequestException(`No invoices found for manager '${managerName}'`);
+            }
+    
+            return filteredInvoices;
+        } catch (error) {
+            this.logger.error(`Error fetching invoices for manager '${managerName}':`, error.message);
+            throw new BadRequestException(`Failed to fetch invoices: ${error.message}`);
+        }
+    }
+    
 
     async findAll(): Promise<Invoice[]> {
         try {

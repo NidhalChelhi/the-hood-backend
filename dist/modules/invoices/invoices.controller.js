@@ -28,6 +28,9 @@ let InvoicesController = class InvoicesController {
     findAll() {
         return this.invoicesService.findAll();
     }
+    findByManagerName(id) {
+        return this.invoicesService.findByManagerName(id);
+    }
     findOne(id) {
         return this.invoicesService.findOne(id);
     }
@@ -52,6 +55,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], InvoicesController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)("manager/:name"),
+    __param(0, (0, common_1.Param)('name')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], InvoicesController.prototype, "findByManagerName", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
