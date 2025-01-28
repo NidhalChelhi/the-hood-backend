@@ -16,8 +16,8 @@ export class InvoicesService {
     constructor(
         @InjectModel(Invoice.name) private readonly invoiceModel: Model<Invoice>,
         @InjectModel(Order.name) private readonly orderModel: Model<Order>, // Inject Order model
-                private readonly userService : UsersService
-        
+        private readonly userService: UsersService
+
     ) { }
 
     async create(createInvoiceDTO: CreateInvoiceDto): Promise<Invoice> {
@@ -29,6 +29,11 @@ export class InvoicesService {
             // Check if all orders exist
             if (!orders || orders.length != createInvoiceDTO.orders.length) {
                 throw new BadRequestException(`Orders with this ids not found`);
+            }
+            // Ensure all orders belong to the same manager
+            const managerIds = new Set(orders.map(order => order.managerId.toString()));
+            if (managerIds.size > 1) {
+                throw new BadRequestException(`All orders must belong to the same manager.`);
             }
             // Check if any of the orders are already associated with another invoice
             const existingInvoices = await this.invoiceModel.find({
@@ -81,16 +86,16 @@ export class InvoicesService {
         if (!managerName || managerName.trim() === '') {
             throw new BadRequestException(`Manager name cannot be empty.`);
         }
-    
+
         try {
             // Step 1: Find all users whose username matches the manager name
             const users = await this.userService.findLikeUserName(managerName);
             if (!users.length) {
                 throw new BadRequestException(`No users found with the name '${managerName}'`);
             }
-    
+
             const managerIds = users.map(user => user._id);
-    
+
             // Step 2: Find invoices where at least one order belongs to these manager IDs
             const invoices = await this.invoiceModel
                 .find()
@@ -106,21 +111,21 @@ export class InvoicesService {
                     }
                 })
                 .exec();
-    
+
             // Step 3: Filter invoices that contain at least one matching order
             const filteredInvoices = invoices.filter(invoice => invoice.orders.length > 0);
-    
+
             if (!filteredInvoices.length) {
                 throw new BadRequestException(`No invoices found for manager '${managerName}'`);
             }
-    
+
             return filteredInvoices;
         } catch (error) {
             this.logger.error(`Error fetching invoices for manager '${managerName}':`, error.message);
             throw new BadRequestException(`Failed to fetch invoices: ${error.message}`);
         }
     }
-    
+
 
     async findAll(): Promise<Invoice[]> {
         try {

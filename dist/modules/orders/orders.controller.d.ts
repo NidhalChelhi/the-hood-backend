@@ -21,7 +21,7 @@ export declare class OrdersController {
     addProductOrder(id: string, createProductOrderDTO: CreateProductOrderDTO): Promise<import("./types").OriginalOrderInfo>;
     updateProductOrder(id: string, product: ProductQueryDTO, updateProductOrderDTO: UpdateProductOrderDTO): Promise<import("./types").OrderInfo>;
     deleteProductOrder(id: string, product: ProductQueryDTO): Promise<import("./types").OriginalOrderInfo>;
-    deleteOrder(id: string): Promise<Omit<import("./orders.schema").Order, "status" | "originalProductOrders" | "totalPrice">>;
+    deleteOrder(id: string): Promise<Omit<import("./orders.schema").Order, "totalPrice" | "originalProductOrders" | "status">>;
     getProcessingDetails(id: string): Promise<import("./types").OrderDetails>;
     validateOrder(id: string): Promise<import("./types").ValidatedOrderInfo>;
     validateOrderAveragePrice(id: string): Promise<import("./types").ValidatedOrderInfo>;

@@ -36,6 +36,10 @@ let InvoicesService = InvoicesService_1 = class InvoicesService {
             if (!orders || orders.length != createInvoiceDTO.orders.length) {
                 throw new common_1.BadRequestException(`Orders with this ids not found`);
             }
+            const managerIds = new Set(orders.map(order => order.managerId.toString()));
+            if (managerIds.size > 1) {
+                throw new common_1.BadRequestException(`All orders must belong to the same manager.`);
+            }
             const existingInvoices = await this.invoiceModel.find({
                 orders: { $in: createInvoiceDTO.orders },
             });
