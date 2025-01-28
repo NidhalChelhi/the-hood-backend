@@ -3,6 +3,7 @@ export declare class Client extends Document {
     firstName: string;
     lastName: string;
     email: string;
+    phoneNumber: string;
     barCode: string;
     points: number;
 }

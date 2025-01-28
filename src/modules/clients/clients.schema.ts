@@ -9,8 +9,11 @@ export class Client extends Document {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   email: string;
+
+  @Prop({ required: true })
+  phoneNumber: string;
 
   @Prop({ required: true, unique: true, index : true })
   barCode: string;
