@@ -24,8 +24,13 @@ let ClientsService = ClientsService_1 = class ClientsService {
         this.logger = new common_1.Logger(ClientsService_1.name);
     }
     async create(createClientDto) {
-        const client = await this.ClientModel.create(createClientDto);
-        return await client.save();
+        try {
+            const client = await this.ClientModel.create(createClientDto);
+            return await client.save();
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException(`Failed to create client : ${error.message}`);
+        }
     }
     async findAll(searchQuery) {
         try {

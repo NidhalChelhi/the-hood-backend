@@ -15,7 +15,7 @@ export class Client extends Document {
   @Prop({ required: true })
   phoneNumber: string;
 
-  @Prop({ required: true, unique: true, index : true })
+  @Prop({ required: true, unique: true, index: true })
   barCode: string;
 
   @Prop({ default: 0 })
@@ -25,9 +25,11 @@ export class Client extends Document {
 export const ClientSchema = SchemaFactory.createForClass(Client);
 
 ClientSchema.pre("save", async function (next) {
-  const mailCheck = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(this.email);
-  if (!mailCheck) {
-    throw new Error("invalid Email format");
+  if (this.email) {
+    const mailCheck = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(this.email);
+    if (!mailCheck) {
+      throw new Error("invalid Email format");
+    }
   }
   next();
 });

@@ -12,61 +12,65 @@ export class ClientsService {
   private readonly logger = new Logger(ClientsService.name);
   constructor(
     @InjectModel(Client.name) private readonly ClientModel: Model<Client>
-  ) {}
+  ) { }
 
   async create(createClientDto: CreateClientDto): Promise<Client> {
-    const client = await this.ClientModel.create(createClientDto);
-    return await client.save();
+    try {
+      const client = await this.ClientModel.create(createClientDto);
+      return await client.save();
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to create client : ${error.message}`)
+    }
   }
 
-  async findAll(searchQuery : ClientQueryDTO) : Promise<PaginatedClients> {
-    try{
-    let options : RootFilterQuery<Client> = {};
-    if(searchQuery.name){
-      options = {
-        $expr : {
-          $regexMatch : {
-            input : { $concat : ["$firstName", "$lastName" ]},
-            regex : searchQuery.name,
-            options: 'i'
+  async findAll(searchQuery: ClientQueryDTO): Promise<PaginatedClients> {
+    try {
+      let options: RootFilterQuery<Client> = {};
+      if (searchQuery.name) {
+        options = {
+          $expr: {
+            $regexMatch: {
+              input: { $concat: ["$firstName", "$lastName"] },
+              regex: searchQuery.name,
+              options: 'i'
+            }
           }
         }
       }
-    }
-    const query = this.ClientModel.find(options);
-    if(searchQuery.sort){
-      const sortCriteria = (searchQuery.sort === 'asc') ? 1 : -1;
-      query.sort({
-        "firstName" : sortCriteria,
-        "lastName" : sortCriteria 
-      });
-    }
-    if(searchQuery.pointSort){
-      const sortCriteria = (searchQuery.pointSort === 'asc') ? 1 : -1;
-      query.sort({
-        "points" : sortCriteria
-      })
-    }
-    const pageNumber = Math.max((searchQuery.page || 1), 1);
-    const limit = 10;
-    const totalElems = await this.countDocs(options);
-    const totalPages = Math.ceil(totalElems / limit);
-    if(pageNumber > totalPages && totalPages !== 0){
+      const query = this.ClientModel.find(options);
+      if (searchQuery.sort) {
+        const sortCriteria = (searchQuery.sort === 'asc') ? 1 : -1;
+        query.sort({
+          "firstName": sortCriteria,
+          "lastName": sortCriteria
+        });
+      }
+      if (searchQuery.pointSort) {
+        const sortCriteria = (searchQuery.pointSort === 'asc') ? 1 : -1;
+        query.sort({
+          "points": sortCriteria
+        })
+      }
+      const pageNumber = Math.max((searchQuery.page || 1), 1);
+      const limit = 10;
+      const totalElems = await this.countDocs(options);
+      const totalPages = Math.ceil(totalElems / limit);
+      if (pageNumber > totalPages && totalPages !== 0) {
         throw new BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
+      }
+      const clients = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
+      return {
+        clients,
+        pageNumber,
+        totalElems,
+        totalPages
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(`Failed to get clients : ${error.message}`)
     }
-    const clients = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
-    return {
-      clients,
-      pageNumber,
-      totalElems,
-      totalPages
-    }
-  }catch(error){
-    throw new InternalServerErrorException(`Failed to get clients : ${error.message}`)
-  }
   }
 
-  async countDocs(options : RootFilterQuery<Client> ){
+  async countDocs(options: RootFilterQuery<Client>) {
     return await this.ClientModel.countDocuments(options).exec();
   }
 

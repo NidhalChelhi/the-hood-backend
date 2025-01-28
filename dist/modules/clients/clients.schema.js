@@ -44,9 +44,11 @@ exports.Client = Client = __decorate([
 ], Client);
 exports.ClientSchema = mongoose_1.SchemaFactory.createForClass(Client);
 exports.ClientSchema.pre("save", async function (next) {
-    const mailCheck = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(this.email);
-    if (!mailCheck) {
-        throw new Error("invalid Email format");
+    if (this.email) {
+        const mailCheck = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(this.email);
+        if (!mailCheck) {
+            throw new Error("invalid Email format");
+        }
     }
     next();
 });
