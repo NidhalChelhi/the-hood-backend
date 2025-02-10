@@ -15,33 +15,33 @@ class CreateProductDTO {
 }
 exports.CreateProductDTO = CreateProductDTO;
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDTO.prototype, "name", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDTO.prototype, "description", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateProductDTO.prototype, "unit", void 0);
 __decorate([
-    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateProductDTO.prototype, "stockLimit", void 0);
 __decorate([
-    (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateProductDTO.prototype, "isRawMaterial", void 0);
 __decorate([
-    (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateProductDTO.prototype, "isActive", void 0);
 //# sourceMappingURL=create-product.dto.js.map

@@ -95,36 +95,6 @@ let SuppliersService = SuppliersService_1 = class SuppliersService {
             throw new common_1.BadRequestException(`Failed to delete suppliers : ${error.message}`);
         }
     }
-    async addProducts(id, productNames) {
-        try {
-            const isValidObjectId = mongoose_2.default.Types.ObjectId.isValid(id);
-            if (!isValidObjectId) {
-                throw new common_1.BadRequestException(`Invalid supplier ID provided : ${id}`);
-            }
-            const supplier = await this.findSupplierById(id);
-            supplier.products.push(...productNames);
-            return await supplier.save();
-        }
-        catch (error) {
-            this.logger.error("Error adding products to supplier:", error.message);
-            throw new common_1.BadRequestException(`Failed to add products to supplier: ${error.message}`);
-        }
-    }
-    async deleteProducts(id, productNames) {
-        try {
-            const isValidObjectId = mongoose_2.default.Types.ObjectId.isValid(id);
-            if (!isValidObjectId) {
-                throw new common_1.BadRequestException(`Invalid supplier ID provided : ${id}`);
-            }
-            const supplier = await this.findSupplierById(id);
-            supplier.products = supplier.products.filter(product => !productNames.includes(product));
-            return await supplier.save();
-        }
-        catch (error) {
-            this.logger.error("Error deleting products from supplier:", error.message);
-            throw new common_1.BadRequestException(`Failed to delete products from supplier: ${error.message}`);
-        }
-    }
 };
 exports.SuppliersService = SuppliersService;
 exports.SuppliersService = SuppliersService = SuppliersService_1 = __decorate([

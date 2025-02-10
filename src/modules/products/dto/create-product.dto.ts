@@ -1,33 +1,33 @@
 import {
   IsBoolean,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
+  IsNumber,
 } from "class-validator";
 
 export class CreateProductDTO {
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   name: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   description: string;
 
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   unit: string;
 
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
   stockLimit: number;
 
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isRawMaterial?: boolean;
 
-  @IsBoolean()
   @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 }

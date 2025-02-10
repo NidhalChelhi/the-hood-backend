@@ -27,14 +27,6 @@ __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
 ], Supplier.prototype, "address", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], Supplier.prototype, "isActive", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: [String] }),
-    __metadata("design:type", Array)
-], Supplier.prototype, "products", void 0);
 exports.Supplier = Supplier = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Supplier);

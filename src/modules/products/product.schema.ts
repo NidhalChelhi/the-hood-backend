@@ -12,52 +12,44 @@ export class Product extends Document {
   @Prop({ required: true })
   unit: string;
 
-  @Prop({
-    type: [{ type: Types.ObjectId, ref: "SupplyBatch" }],
-    default: [],
-  })
-  supplyBatchIds: Types.ObjectId[];
-
-  @Prop({ default: true })
-  isActive: boolean;
-
   @Prop({ required: true })
   stockLimit: number;
+
+  @Prop({ type: Types.ObjectId, ref: "Supplier" })
+  supplier?: Types.ObjectId;
+
+  @Prop({ required: true, default: 0 })
+  quantity: number;
+
+  @Prop({
+    default: 0,
+    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+  })
+  purchasePrice: number;
+
+  @Prop({
+    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+  })
+  sellingPriceGold?: number;
+
+  @Prop({
+    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+  })
+  sellingPriceSilver?: number;
+
+  @Prop({
+    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+  })
+  sellingPriceBronze?: number;
 
   @Prop({ default: false })
   isBelowStockLimit: boolean;
 
   @Prop({ default: false })
   isRawMaterial: boolean;
+
+  @Prop({ default: true })
+  isActive: boolean;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);
-
-@Schema({ timestamps: true })
-export class SupplyBatch extends Document {
-  @Prop({ type: Types.ObjectId, ref: "Product", required: true })
-  productId: Types.ObjectId;
-
-  @Prop({ required: true })
-  purchasePrice: number;
-
-  @Prop()
-  sellingPriceGold?: number;
-
-  @Prop()
-  sellingPriceSilver?: number;
-
-  @Prop()
-  sellingPriceBronze?: number;
-
-  @Prop({ required: true })
-  quantity: number;
-
-  @Prop({ type: Types.ObjectId, ref: "Supplier" })
-  supplierId?: Types.ObjectId;
-
-  @Prop({ default: false })
-  isFromRawMaterial: boolean;
-}
-
-export const SupplyBatchSchema = SchemaFactory.createForClass(SupplyBatch);

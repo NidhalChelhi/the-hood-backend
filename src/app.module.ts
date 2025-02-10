@@ -11,9 +11,8 @@ import { JwtAuthGuard } from "./common/guards/jwt-auth.guard";
 import { RolesGuard } from "./common/guards/roles.guard";
 import { ProductsModule } from "./modules/products/products.module";
 import { SuppliersModule } from "./modules/suppliers/suppliers.module";
-import { OrderModule } from "./modules/orders/orders.module";
-import { ClientsModule } from './modules/clients/clients.module';
-import { InvoicesModule } from './modules/invoices/invoices.module';
+import { ClientsModule } from "./modules/clients/clients.module";
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
@@ -25,16 +24,14 @@ import { InvoicesModule } from './modules/invoices/invoices.module';
     AuthModule,
     ProductsModule,
     SuppliersModule,
-    OrderModule,
     ClientsModule,
-    InvoicesModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     JwtAuthGuard,
     RolesGuard,
-
     {
       provide: APP_GUARD,
       useClass: AuthCompositeGuard,

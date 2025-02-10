@@ -1,53 +1,31 @@
-import { Model, RootFilterQuery } from "mongoose";
-import { Product, SupplyBatch } from "./product.schema";
+import { Model } from "mongoose";
+import { Product } from "./product.schema";
+import { ReceivingNote } from "./receiving-note.schema";
 import { CreateProductDTO } from "./dto/create-product.dto";
+import { ReceivingNoteDTO } from "./dto/receiving-note.dto";
 import { UpdateProductDTO } from "./dto/update-product.dto";
-import { CreateSupplyBatchDTO } from "./dto/create-supply-batch.dto";
-import { NormalProductUsedBatch, PopulatedProduct } from "./types";
-import { LocationRank } from "src/common/enums/location-rank.enum";
-import { ProductQueryDTO } from "./dto/product-query.dto";
-import { PaginatedProducts } from "./dto/paginated-product.dto";
+import { ConvertRawMaterialsDTO } from "./dto/convert-raw-materials.dto";
 export declare class ProductsService {
     private readonly productModel;
-    private readonly supplyBatchModel;
-    private readonly logger;
-    constructor(productModel: Model<Product>, supplyBatchModel: Model<SupplyBatch>);
-    createProduct(createProductDTO: CreateProductDTO): Promise<Product>;
-    countProductDocs(options: RootFilterQuery<Product>): Promise<number>;
-    findAllProducts(productQuery: ProductQueryDTO): Promise<PaginatedProducts>;
-    findProductById(id: string): Promise<PopulatedProduct>;
-    updateProduct(id: string, updateProductDTO: UpdateProductDTO): Promise<Product>;
-    deleteProduct(id: string): Promise<void>;
-    getProductStock(productId: string): Promise<number>;
-    getProductAveragePrice(productId: string): Promise<{
-        totalQuantity: number;
-        totalPurchasePrice: number;
-        totalSellingPriceGold: number;
-        totalSellingPriceSilver: number;
-        totalSellingPriceBronze: number;
-        averagePurchasePrice: number;
-        averageSellingPriceGold: number;
-        averageSellingPriceSilver: number;
-        averageSellingPriceBronze: number;
+    private readonly receivingNoteModel;
+    constructor(productModel: Model<Product>, receivingNoteModel: Model<ReceivingNote>);
+    create(createProductDto: CreateProductDTO): Promise<Product>;
+    findAll(page?: number, limit?: number, search?: string): Promise<{
+        data: Product[];
+        total: number;
     }>;
-    getLowStockProducts(): Promise<Product[]>;
-    createSupplyBatch(createSupplyBatchDTO: CreateSupplyBatchDTO): Promise<SupplyBatch>;
-    retrieveStock(productId: string, quantity: number): Promise<{
-        productName: string;
-        usedBatches: any[];
+    findOne(id: string): Promise<Product>;
+    update(id: string, updateProductDto: UpdateProductDTO): Promise<Product>;
+    remove(id: string): Promise<Product>;
+    addQuantity(receivingNoteDto: ReceivingNoteDTO): Promise<Product>;
+    toggleStatus(id: string): Promise<Product>;
+    convertRawMaterials(convertRawMaterialsDto: ConvertRawMaterialsDTO): Promise<Product>;
+    findNormalProducts(page?: number, limit?: number, search?: string): Promise<{
+        data: Product[];
+        total: number;
     }>;
-    retrieveNormalProductStock(productId: string, quantity: number, rank: LocationRank): Promise<{
-        productName: string;
-        usedBatches: NormalProductUsedBatch[];
+    findRawMaterials(page?: number, limit?: number, search?: string): Promise<{
+        data: Product[];
+        total: number;
     }>;
-    findRawMaterials(): Promise<PopulatedProduct[]>;
-    findNormalProducts(): Promise<PopulatedProduct[]>;
-    convertRawMaterialsToProduct(rawMaterials: {
-        productId: string;
-        quantityUsed: number;
-    }[], producedProductId: string, producedQuantity: number, sellingPrices: {
-        gold: number;
-        silver: number;
-        bronze: number;
-    }): Promise<SupplyBatch>;
 }

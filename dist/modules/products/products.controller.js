@@ -16,139 +16,123 @@ exports.ProductsController = void 0;
 const common_1 = require("@nestjs/common");
 const products_service_1 = require("./products.service");
 const create_product_dto_1 = require("./dto/create-product.dto");
-const update_product_dto_1 = require("./dto/update-product.dto");
+const receiving_note_dto_1 = require("./dto/receiving-note.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
-const product_query_dto_1 = require("./dto/product-query.dto");
+const update_product_dto_1 = require("./dto/update-product.dto");
+const convert_raw_materials_dto_1 = require("./dto/convert-raw-materials.dto");
 let ProductsController = class ProductsController {
     constructor(productsService) {
         this.productsService = productsService;
     }
-    async createProduct(createProductDTO) {
-        return this.productsService.createProduct(createProductDTO);
+    async findNormalProducts(page = 1, limit = 10, search) {
+        return this.productsService.findNormalProducts(page, limit, search);
     }
-    async findAllProducts(serachQuery) {
-        return this.productsService.findAllProducts(serachQuery);
+    async findRawMaterials(page = 1, limit = 10, search) {
+        return this.productsService.findRawMaterials(page, limit, search);
     }
-    async findRawMaterials() {
-        return this.productsService.findRawMaterials();
+    async create(createProductDto) {
+        return this.productsService.create(createProductDto);
     }
-    async findNormalProducts() {
-        return this.productsService.findNormalProducts();
+    async findAll(page = 1, limit = 10, search) {
+        return this.productsService.findAll(page, limit, search);
     }
-    async getLowStockProducts() {
-        return this.productsService.getLowStockProducts();
+    async findOne(id) {
+        return this.productsService.findOne(id);
     }
-    async getProductStock(id) {
-        return this.productsService.getProductStock(id);
+    async update(id, updateProductDto) {
+        return this.productsService.update(id, updateProductDto);
     }
-    async createSupplyBatch(productId, createSupplyBatchDTO) {
-        return this.productsService.createSupplyBatch({
-            ...createSupplyBatchDTO,
-            productId,
-        });
+    async remove(id) {
+        return this.productsService.remove(id);
     }
-    async retrieveStock(productId, { quantity }) {
-        return this.productsService.retrieveStock(productId, quantity);
+    async addQuantity(receivingNoteDto) {
+        return this.productsService.addQuantity(receivingNoteDto);
     }
-    async convertRawMaterialsToProduct(conversionDetails) {
-        return this.productsService.convertRawMaterialsToProduct(conversionDetails.rawMaterials, conversionDetails.producedProductId, conversionDetails.producedQuantity, conversionDetails.sellingPrices);
+    async toggleStatus(id) {
+        return this.productsService.toggleStatus(id);
     }
-    async findProductById(id) {
-        return this.productsService.findProductById(id);
-    }
-    async updateProduct(id, updateProductDTO) {
-        return this.productsService.updateProduct(id, updateProductDTO);
-    }
-    async deleteProduct(id) {
-        await this.productsService.deleteProduct(id);
-        return { message: "Product deleted successfully" };
+    async convertRawMaterials(convertRawMaterialsDto) {
+        return this.productsService.convertRawMaterials(convertRawMaterialsDto);
     }
 };
 exports.ProductsController = ProductsController;
+__decorate([
+    (0, common_1.Get)("normal"),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "findNormalProducts", null);
+__decorate([
+    (0, common_1.Get)("raw-materials"),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "findRawMaterials", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_product_dto_1.CreateProductDTO]),
     __metadata("design:returntype", Promise)
-], ProductsController.prototype, "createProduct", null);
+], ProductsController.prototype, "create", null);
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Query)()),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [product_query_dto_1.ProductQueryDTO]),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findAllProducts", null);
-__decorate([
-    (0, common_1.Get)("raw-materials"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findRawMaterials", null);
-__decorate([
-    (0, common_1.Get)("normal-products"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findNormalProducts", null);
-__decorate([
-    (0, common_1.Get)("low-stock"),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "getLowStockProducts", null);
-__decorate([
-    (0, common_1.Get)(":id/stock"),
-    __param(0, (0, common_1.Param)("id")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "getProductStock", null);
-__decorate([
-    (0, common_1.Post)(":id/supply-batch"),
-    __param(0, (0, common_1.Param)("id")),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "createSupplyBatch", null);
-__decorate([
-    (0, common_1.Post)(":id/retrieve-stock"),
-    __param(0, (0, common_1.Param)("id")),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "retrieveStock", null);
-__decorate([
-    (0, common_1.Post)("convert"),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "convertRawMaterialsToProduct", null);
+], ProductsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findProductById", null);
+], ProductsController.prototype, "findOne", null);
 __decorate([
-    (0, common_1.Patch)(":id"),
+    (0, common_1.Put)(":id"),
     __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, update_product_dto_1.UpdateProductDTO]),
     __metadata("design:returntype", Promise)
-], ProductsController.prototype, "updateProduct", null);
+], ProductsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(":id"),
     __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], ProductsController.prototype, "deleteProduct", null);
+], ProductsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)("add-quantity"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [receiving_note_dto_1.ReceivingNoteDTO]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "addQuantity", null);
+__decorate([
+    (0, common_1.Put)(":id/toggle-status"),
+    __param(0, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "toggleStatus", null);
+__decorate([
+    (0, common_1.Post)("convert"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [convert_raw_materials_dto_1.ConvertRawMaterialsDTO]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "convertRawMaterials", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Controller)("products"),

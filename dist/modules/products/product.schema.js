@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SupplyBatchSchema = exports.SupplyBatch = exports.ProductSchema = exports.Product = void 0;
+exports.ProductSchema = exports.Product = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 let Product = class Product extends mongoose_2.Document {
@@ -28,20 +28,42 @@ __decorate([
     __metadata("design:type", String)
 ], Product.prototype, "unit", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({
-        type: [{ type: mongoose_2.Types.ObjectId, ref: "SupplyBatch" }],
-        default: [],
-    }),
-    __metadata("design:type", Array)
-], Product.prototype, "supplyBatchIds", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: true }),
-    __metadata("design:type", Boolean)
-], Product.prototype, "isActive", void 0);
-__decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Number)
 ], Product.prototype, "stockLimit", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: "Supplier" }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Product.prototype, "supplier", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, default: 0 }),
+    __metadata("design:type", Number)
+], Product.prototype, "quantity", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        default: 0,
+        set: (value) => parseFloat(value.toFixed(3)),
+    }),
+    __metadata("design:type", Number)
+], Product.prototype, "purchasePrice", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        set: (value) => parseFloat(value.toFixed(3)),
+    }),
+    __metadata("design:type", Number)
+], Product.prototype, "sellingPriceGold", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        set: (value) => parseFloat(value.toFixed(3)),
+    }),
+    __metadata("design:type", Number)
+], Product.prototype, "sellingPriceSilver", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        set: (value) => parseFloat(value.toFixed(3)),
+    }),
+    __metadata("design:type", Number)
+], Product.prototype, "sellingPriceBronze", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
@@ -50,47 +72,12 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], Product.prototype, "isRawMaterial", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], Product.prototype, "isActive", void 0);
 exports.Product = Product = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Product);
 exports.ProductSchema = mongoose_1.SchemaFactory.createForClass(Product);
-let SupplyBatch = class SupplyBatch extends mongoose_2.Document {
-};
-exports.SupplyBatch = SupplyBatch;
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: "Product", required: true }),
-    __metadata("design:type", mongoose_2.Types.ObjectId)
-], SupplyBatch.prototype, "productId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Number)
-], SupplyBatch.prototype, "purchasePrice", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], SupplyBatch.prototype, "sellingPriceGold", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], SupplyBatch.prototype, "sellingPriceSilver", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], SupplyBatch.prototype, "sellingPriceBronze", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Number)
-], SupplyBatch.prototype, "quantity", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: "Supplier" }),
-    __metadata("design:type", mongoose_2.Types.ObjectId)
-], SupplyBatch.prototype, "supplierId", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: false }),
-    __metadata("design:type", Boolean)
-], SupplyBatch.prototype, "isFromRawMaterial", void 0);
-exports.SupplyBatch = SupplyBatch = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
-], SupplyBatch);
-exports.SupplyBatchSchema = mongoose_1.SchemaFactory.createForClass(SupplyBatch);
 //# sourceMappingURL=product.schema.js.map
