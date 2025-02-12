@@ -6,11 +6,13 @@ import {
   Patch,
   Delete,
   Body,
+  Query,
 } from "@nestjs/common";
 import { SuppliersService } from "./suppliers.service";
 import { CreateSupplierDTO } from "./dto/create-supplier.dto";
 import { UpdateSupplierDTO } from "./dto/update-supplier.dto";
 import { Public } from "src/common/decorators/public.decorator";
+import { Supplier } from "./supplier.schema";
 
 @Public()
 @Controller("suppliers")
@@ -23,8 +25,12 @@ export class SuppliersController {
   }
 
   @Get()
-  async findAllSuppliers() {
-    return this.suppliersService.findAllSuppliers();
+  async findAll(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("search") search?: string
+  ): Promise<{ data: Supplier[]; total: number }> {
+    return this.suppliersService.findAllSuppliers(page, limit, search);
   }
 
   @Get(":id")

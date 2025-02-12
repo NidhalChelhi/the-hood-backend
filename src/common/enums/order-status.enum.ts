@@ -1,7 +1,5 @@
 export enum OrderStatus {
-    Pending = "pending",
-    Rejected = "rejected",
-    Validated = "validated",
-    Confirmed = "confirmed",
-    Facturated = "facturated",
+  PENDING = "Pending",
+  ACCEPTED = "Accepted",
+  DENIED = "Denied",
 }

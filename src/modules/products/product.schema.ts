@@ -23,22 +23,22 @@ export class Product extends Document {
 
   @Prop({
     default: 0,
-    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+    set: (value: number) => parseFloat(value.toFixed(3)),
   })
   purchasePrice: number;
 
   @Prop({
-    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+    set: (value: number) => parseFloat(value.toFixed(3)),
   })
   sellingPriceGold?: number;
 
   @Prop({
-    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+    set: (value: number) => parseFloat(value.toFixed(3)),
   })
   sellingPriceSilver?: number;
 
   @Prop({
-    set: (value: number) => parseFloat(value.toFixed(3)), // Ensure 3 decimal places
+    set: (value: number) => parseFloat(value.toFixed(3)),
   })
   sellingPriceBronze?: number;
 

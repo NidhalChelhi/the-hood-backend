@@ -16,25 +16,36 @@ exports.OrdersController = void 0;
 const common_1 = require("@nestjs/common");
 const orders_service_1 = require("./orders.service");
 const create_order_dto_1 = require("./dto/create-order.dto");
-const update_order_dto_1 = require("./dto/update-order.dto");
+const public_decorator_1 = require("../../common/decorators/public.decorator");
 let OrdersController = class OrdersController {
     constructor(ordersService) {
         this.ordersService = ordersService;
     }
-    create(createOrderDto) {
-        return this.ordersService.create(createOrderDto);
+    async createOrder(createOrderDTO) {
+        try {
+            return await this.ordersService.createOrder(createOrderDTO);
+        }
+        catch (error) {
+            throw new common_1.HttpException(error.message || "Erreur lors de la création de la commande", common_1.HttpStatus.BAD_REQUEST);
+        }
     }
-    findAll() {
-        return this.ordersService.findAll();
+    async processOrder(orderId, action, modifiedItems) {
+        try {
+            return await this.ordersService.processOrder(orderId, action, modifiedItems);
+        }
+        catch (error) {
+            throw new common_1.HttpException(error.message || "Erreur lors du traitement de la commande", common_1.HttpStatus.BAD_REQUEST);
+        }
     }
-    findOne(id) {
-        return this.ordersService.findOne(+id);
+    async findAll(page = 1, limit = 10, search, filter) {
+        return this.ordersService.findAll(page, limit, search, filter);
     }
-    update(id, updateOrderDto) {
-        return this.ordersService.update(+id, updateOrderDto);
-    }
-    remove(id) {
-        return this.ordersService.remove(+id);
+    async getOrder(orderId) {
+        const order = await this.ordersService.findOne(orderId);
+        if (!order) {
+            throw new common_1.NotFoundException(`Order with ID ${orderId} not found`);
+        }
+        return order;
     }
 };
 exports.OrdersController = OrdersController;
@@ -42,39 +53,38 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_order_dto_1.CreateOrderDto]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "create", null);
+    __metadata("design:paramtypes", [create_order_dto_1.CreateOrderDTO]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "createOrder", null);
+__decorate([
+    (0, common_1.Patch)(":id/process"),
+    __param(0, (0, common_1.Param)("id")),
+    __param(1, (0, common_1.Body)("action")),
+    __param(2, (0, common_1.Body)("modifiedItems")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "processOrder", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
+    __param(3, (0, common_1.Query)("filter")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
+    __metadata("design:paramtypes", [Number, Number, String, String]),
+    __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "findAll", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
+    (0, common_1.Get)(":id"),
+    __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "findOne", null);
-__decorate([
-    (0, common_1.Patch)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, update_order_dto_1.UpdateOrderDto]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "update", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], OrdersController.prototype, "remove", null);
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "getOrder", null);
 exports.OrdersController = OrdersController = __decorate([
-    (0, common_1.Controller)('orders'),
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Controller)("orders"),
     __metadata("design:paramtypes", [orders_service_1.OrdersService])
 ], OrdersController);
 //# sourceMappingURL=orders.controller.js.map

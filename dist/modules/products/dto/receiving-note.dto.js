@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReceivingNoteDTO = void 0;
+exports.ReceivingNoteMultipleDTO = exports.ReceivingNoteDTO = void 0;
 const class_validator_1 = require("class-validator");
 class ReceivingNoteDTO {
 }
@@ -48,5 +48,8 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ReceivingNoteDTO.prototype, "supplierId", void 0);
+], ReceivingNoteDTO.prototype, "supplier", void 0);
+class ReceivingNoteMultipleDTO {
+}
+exports.ReceivingNoteMultipleDTO = ReceivingNoteMultipleDTO;
 //# sourceMappingURL=receiving-note.dto.js.map

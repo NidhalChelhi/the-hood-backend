@@ -1,34 +1,75 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { OrdersService } from './orders.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import {
+  Body,
+  Controller,
+  Post,
+  Param,
+  Patch,
+  Get,
+  NotFoundException,
+  HttpException,
+  HttpStatus,
+  Query,
+} from "@nestjs/common";
+import { OrdersService } from "./orders.service";
+import { CreateOrderDTO } from "./dto/create-order.dto";
+import { UpdateOrderDTO } from "./dto/update-order.dto";
+import { Public } from "src/common/decorators/public.decorator";
+import { Order } from "./order.schema";
 
-@Controller('orders')
+@Public()
+@Controller("orders")
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+  async createOrder(@Body() createOrderDTO: CreateOrderDTO) {
+    // handle errors
+    try {
+      return await this.ordersService.createOrder(createOrderDTO);
+    } catch (error) {
+      throw new HttpException(
+        error.message || "Erreur lors de la création de la commande",
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  @Patch(":id/process")
+  async processOrder(
+    @Param("id") orderId: string,
+    @Body("action") action: "decline" | "accept" | "modify",
+    @Body("modifiedItems") modifiedItems?: UpdateOrderDTO["orderItems"]
+  ) {
+    try {
+      return await this.ordersService.processOrder(
+        orderId,
+        action,
+        modifiedItems
+      );
+    } catch (error) {
+      throw new HttpException(
+        error.message || "Erreur lors du traitement de la commande",
+        HttpStatus.BAD_REQUEST
+      );
+    }
   }
 
   @Get()
-  findAll() {
-    return this.ordersService.findAll();
+  async findAll(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("search") search?: string,
+    @Query("filter") filter?: string
+  ): Promise<{ data: Order[]; total: number }> {
+    return this.ordersService.findAll(page, limit, search, filter);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(+id, updateOrderDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
+  @Get(":id")
+  async getOrder(@Param("id") orderId: string) {
+    const order = await this.ordersService.findOne(orderId);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${orderId} not found`);
+    }
+    return order;
   }
 }

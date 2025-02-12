@@ -20,21 +20,16 @@ const receiving_note_dto_1 = require("./dto/receiving-note.dto");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
 const update_product_dto_1 = require("./dto/update-product.dto");
 const convert_raw_materials_dto_1 = require("./dto/convert-raw-materials.dto");
+const edit_quantity_dto_1 = require("./dto/edit-quantity.dto");
 let ProductsController = class ProductsController {
     constructor(productsService) {
         this.productsService = productsService;
     }
-    async findNormalProducts(page = 1, limit = 10, search) {
-        return this.productsService.findNormalProducts(page, limit, search);
-    }
-    async findRawMaterials(page = 1, limit = 10, search) {
-        return this.productsService.findRawMaterials(page, limit, search);
-    }
     async create(createProductDto) {
         return this.productsService.create(createProductDto);
     }
-    async findAll(page = 1, limit = 10, search) {
-        return this.productsService.findAll(page, limit, search);
+    async findAll(page = 1, limit = 10, search, filter) {
+        return this.productsService.findAll(page, limit, search, filter);
     }
     async findOne(id) {
         return this.productsService.findOne(id);
@@ -45,35 +40,29 @@ let ProductsController = class ProductsController {
     async remove(id) {
         return this.productsService.remove(id);
     }
+    async toggleStatus(id) {
+        return this.productsService.toggleStatus(id);
+    }
     async addQuantity(receivingNoteDto) {
         return this.productsService.addQuantity(receivingNoteDto);
     }
-    async toggleStatus(id) {
-        return this.productsService.toggleStatus(id);
+    async addQuantities(receivingNoteMultipleDto) {
+        return this.productsService.addQuantities(receivingNoteMultipleDto);
+    }
+    async editQuantity(editQuantityDto) {
+        return this.productsService.editQuantity(editQuantityDto);
     }
     async convertRawMaterials(convertRawMaterialsDto) {
         return this.productsService.convertRawMaterials(convertRawMaterialsDto);
     }
+    async findAllReceivingNotes(page = 1, limit = 10, search) {
+        return this.productsService.findAllReceivingNotes(page, limit, search);
+    }
+    async findOneReceivingNote(id) {
+        return this.productsService.findOneReceivingNote(id);
+    }
 };
 exports.ProductsController = ProductsController;
-__decorate([
-    (0, common_1.Get)("normal"),
-    __param(0, (0, common_1.Query)("page")),
-    __param(1, (0, common_1.Query)("limit")),
-    __param(2, (0, common_1.Query)("search")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, String]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findNormalProducts", null);
-__decorate([
-    (0, common_1.Get)("raw-materials"),
-    __param(0, (0, common_1.Query)("page")),
-    __param(1, (0, common_1.Query)("limit")),
-    __param(2, (0, common_1.Query)("search")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, String]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "findRawMaterials", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
@@ -86,8 +75,9 @@ __decorate([
     __param(0, (0, common_1.Query)("page")),
     __param(1, (0, common_1.Query)("limit")),
     __param(2, (0, common_1.Query)("search")),
+    __param(3, (0, common_1.Query)("filter")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:paramtypes", [Number, Number, String, String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findAll", null);
 __decorate([
@@ -113,13 +103,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "remove", null);
 __decorate([
-    (0, common_1.Post)("add-quantity"),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [receiving_note_dto_1.ReceivingNoteDTO]),
-    __metadata("design:returntype", Promise)
-], ProductsController.prototype, "addQuantity", null);
-__decorate([
     (0, common_1.Put)(":id/toggle-status"),
     __param(0, (0, common_1.Param)("id")),
     __metadata("design:type", Function),
@@ -127,12 +110,49 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "toggleStatus", null);
 __decorate([
+    (0, common_1.Post)("add-quantity"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [receiving_note_dto_1.ReceivingNoteDTO]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "addQuantity", null);
+__decorate([
+    (0, common_1.Post)("add-quantities"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [receiving_note_dto_1.ReceivingNoteMultipleDTO]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "addQuantities", null);
+__decorate([
+    (0, common_1.Put)("edit-quantity"),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [edit_quantity_dto_1.EditQuantityDTO]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "editQuantity", null);
+__decorate([
     (0, common_1.Post)("convert"),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [convert_raw_materials_dto_1.ConvertRawMaterialsDTO]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "convertRawMaterials", null);
+__decorate([
+    (0, common_1.Get)("receiving-notes/all"),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "findAllReceivingNotes", null);
+__decorate([
+    (0, common_1.Get)("receiving-notes/:id"),
+    __param(0, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "findOneReceivingNote", null);
 exports.ProductsController = ProductsController = __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Controller)("products"),

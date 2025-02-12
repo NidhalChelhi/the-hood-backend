@@ -11,7 +11,10 @@ export declare class SuppliersService {
     }> & {
         __v: number;
     }>;
-    findAllSuppliers(): Promise<Supplier[]>;
+    findAllSuppliers(page?: number, limit?: number, search?: string): Promise<{
+        data: Supplier[];
+        total: number;
+    }>;
     findSupplierById(id: string): Promise<Supplier>;
     updateSupplier(id: string, updateSupplierDTO: UpdateSupplierDTO): Promise<Supplier>;
     deleteSupplier(id: string): Promise<void>;

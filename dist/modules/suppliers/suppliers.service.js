@@ -36,14 +36,17 @@ let SuppliersService = SuppliersService_1 = class SuppliersService {
             throw new common_1.BadRequestException(`Failed to create supplier: ${error.message}`);
         }
     }
-    async findAllSuppliers() {
-        try {
-            return await this.supplierModel.find();
-        }
-        catch (error) {
-            this.logger.error("Error fetching suppliers : ", error.message);
-            throw new common_1.BadRequestException(`Failed to fetch suppliers : ${error.message}`);
-        }
+    async findAllSuppliers(page = 1, limit = 10, search) {
+        const query = search ? { name: { $regex: search, $options: "i" } } : {};
+        const [data, total] = await Promise.all([
+            this.supplierModel
+                .find(query)
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .exec(),
+            this.supplierModel.countDocuments(query).exec(),
+        ]);
+        return { data, total };
     }
     async findSupplierById(id) {
         const isValidObjectId = mongoose_2.default.Types.ObjectId.isValid(id);

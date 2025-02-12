@@ -5,5 +5,16 @@ export declare class ReceivingNoteDTO {
     sellingPriceGold?: number;
     sellingPriceSilver?: number;
     sellingPriceBronze?: number;
-    supplierId: string;
+    supplier: string;
+}
+export declare class ReceivingNoteMultipleDTO {
+    items: {
+        productId: string;
+        quantityAdded: number;
+        purchasePrice: number;
+        sellingPriceGold?: number;
+        sellingPriceSilver?: number;
+        sellingPriceBronze?: number;
+    }[];
+    supplier: string;
 }

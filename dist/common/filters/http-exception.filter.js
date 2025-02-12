@@ -19,11 +19,12 @@ let HttpExceptionFilter = class HttpExceptionFilter {
         const message = exception instanceof common_1.HttpException
             ? exception.getResponse()
             : "Internal server error";
+        console.error(`Error: ${message}`, exception);
         response.status(status).json({
             statusCode: status,
             timestamp: new Date().toISOString(),
             path: request.url,
-            message,
+            message: message,
         });
     }
 };

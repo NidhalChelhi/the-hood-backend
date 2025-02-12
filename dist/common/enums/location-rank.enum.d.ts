@@ -1,5 +1,5 @@
 export declare enum LocationRank {
-    Gold = "gold",
-    Silver = "silver",
-    Bronze = "bronze"
+    GOLD = "Gold",
+    SILVER = "Silver",
+    BRONZE = "Bronze"
 }

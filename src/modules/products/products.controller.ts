@@ -10,34 +10,21 @@ import {
 } from "@nestjs/common";
 import { ProductsService } from "./products.service";
 import { CreateProductDTO } from "./dto/create-product.dto";
-import { ReceivingNoteDTO } from "./dto/receiving-note.dto";
+import {
+  ReceivingNoteDTO,
+  ReceivingNoteMultipleDTO,
+} from "./dto/receiving-note.dto";
 import { Product } from "./product.schema";
 import { Public } from "src/common/decorators/public.decorator";
 import { UpdateProductDTO } from "./dto/update-product.dto";
 import { ConvertRawMaterialsDTO } from "./dto/convert-raw-materials.dto";
+import { EditQuantityDTO } from "./dto/edit-quantity.dto";
+import { ReceivingNote } from "./receiving-note.schema";
 
 @Public()
 @Controller("products")
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
-
-  @Get("normal")
-  async findNormalProducts(
-    @Query("page") page: number = 1,
-    @Query("limit") limit: number = 10,
-    @Query("search") search?: string
-  ): Promise<{ data: Product[]; total: number }> {
-    return this.productsService.findNormalProducts(page, limit, search);
-  }
-
-  @Get("raw-materials")
-  async findRawMaterials(
-    @Query("page") page: number = 1,
-    @Query("limit") limit: number = 10,
-    @Query("search") search?: string
-  ): Promise<{ data: Product[]; total: number }> {
-    return this.productsService.findRawMaterials(page, limit, search);
-  }
 
   @Post()
   async create(@Body() createProductDto: CreateProductDTO): Promise<Product> {
@@ -48,9 +35,10 @@ export class ProductsController {
   async findAll(
     @Query("page") page: number = 1,
     @Query("limit") limit: number = 10,
-    @Query("search") search?: string
+    @Query("search") search?: string,
+    @Query("filter") filter?: string
   ): Promise<{ data: Product[]; total: number }> {
-    return this.productsService.findAll(page, limit, search);
+    return this.productsService.findAll(page, limit, search, filter);
   }
 
   @Get(":id")
@@ -71,6 +59,11 @@ export class ProductsController {
     return this.productsService.remove(id);
   }
 
+  @Put(":id/toggle-status")
+  async toggleStatus(@Param("id") id: string): Promise<Product> {
+    return this.productsService.toggleStatus(id);
+  }
+
   @Post("add-quantity")
   async addQuantity(
     @Body() receivingNoteDto: ReceivingNoteDTO
@@ -78,9 +71,18 @@ export class ProductsController {
     return this.productsService.addQuantity(receivingNoteDto);
   }
 
-  @Put(":id/toggle-status")
-  async toggleStatus(@Param("id") id: string): Promise<Product> {
-    return this.productsService.toggleStatus(id);
+  @Post("add-quantities")
+  async addQuantities(
+    @Body() receivingNoteMultipleDto: ReceivingNoteMultipleDTO
+  ): Promise<Product[]> {
+    return this.productsService.addQuantities(receivingNoteMultipleDto);
+  }
+
+  @Put("edit-quantity")
+  async editQuantity(
+    @Body() editQuantityDto: EditQuantityDTO
+  ): Promise<Product> {
+    return this.productsService.editQuantity(editQuantityDto);
   }
 
   @Post("convert")
@@ -88,5 +90,19 @@ export class ProductsController {
     @Body() convertRawMaterialsDto: ConvertRawMaterialsDTO
   ): Promise<Product> {
     return this.productsService.convertRawMaterials(convertRawMaterialsDto);
+  }
+
+  @Get("receiving-notes/all")
+  async findAllReceivingNotes(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("search") search?: string
+  ): Promise<{ data: ReceivingNote[]; total: number }> {
+    return this.productsService.findAllReceivingNotes(page, limit, search);
+  }
+
+  @Get("receiving-notes/:id")
+  async findOneReceivingNote(@Param("id") id: string): Promise<ReceivingNote> {
+    return this.productsService.findOneReceivingNote(id);
   }
 }

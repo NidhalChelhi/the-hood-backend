@@ -18,17 +18,33 @@ const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const product_schema_1 = require("./product.schema");
 const receiving_note_schema_1 = require("./receiving-note.schema");
+const supplier_schema_1 = require("../suppliers/supplier.schema");
 let ProductsService = class ProductsService {
-    constructor(productModel, receivingNoteModel) {
+    constructor(productModel, receivingNoteModel, supplierModel) {
         this.productModel = productModel;
         this.receivingNoteModel = receivingNoteModel;
+        this.supplierModel = supplierModel;
     }
     async create(createProductDto) {
         const createdProduct = new this.productModel(createProductDto);
         return createdProduct.save();
     }
-    async findAll(page = 1, limit = 10, search) {
-        const query = search ? { name: { $regex: search, $options: "i" } } : {};
+    async findAll(page = 1, limit = 10, search, filter) {
+        const query = {};
+        if (filter) {
+            if (filter === "normal") {
+                query.isRawMaterial = false;
+            }
+            else if (filter === "raw") {
+                query.isRawMaterial = true;
+            }
+        }
+        if (search) {
+            query.$or = [
+                { name: { $regex: search, $options: "i" } },
+                { description: { $regex: search, $options: "i" } },
+            ];
+        }
         const [data, total] = await Promise.all([
             this.productModel
                 .find(query)
@@ -63,7 +79,7 @@ let ProductsService = class ProductsService {
         return deletedProduct;
     }
     async addQuantity(receivingNoteDto) {
-        const { productId, quantityAdded, purchasePrice, sellingPriceGold, sellingPriceSilver, sellingPriceBronze, supplierId, } = receivingNoteDto;
+        const { productId, quantityAdded, purchasePrice, sellingPriceGold, sellingPriceSilver, sellingPriceBronze, supplier, } = receivingNoteDto;
         const product = await this.productModel.findById(productId).exec();
         if (!product) {
             throw new common_1.NotFoundException(`Product with ID ${productId} not found`);
@@ -71,33 +87,39 @@ let ProductsService = class ProductsService {
         const totalQuantity = product.quantity + quantityAdded;
         const totalPurchasePrice = product.purchasePrice * product.quantity + purchasePrice * quantityAdded;
         product.purchasePrice = totalPurchasePrice / totalQuantity;
-        if (sellingPriceGold !== undefined) {
-            const totalSellingPriceGold = (product.sellingPriceGold || 0) * product.quantity +
-                sellingPriceGold * quantityAdded;
-            product.sellingPriceGold = totalSellingPriceGold / totalQuantity;
-        }
-        if (sellingPriceSilver !== undefined) {
-            const totalSellingPriceSilver = (product.sellingPriceSilver || 0) * product.quantity +
-                sellingPriceSilver * quantityAdded;
-            product.sellingPriceSilver = totalSellingPriceSilver / totalQuantity;
-        }
-        if (sellingPriceBronze !== undefined) {
-            const totalSellingPriceBronze = (product.sellingPriceBronze || 0) * product.quantity +
-                sellingPriceBronze * quantityAdded;
-            product.sellingPriceBronze = totalSellingPriceBronze / totalQuantity;
+        if (!product.isRawMaterial) {
+            if (sellingPriceGold !== undefined) {
+                const totalSellingPriceGold = (product.sellingPriceGold || 0) * product.quantity +
+                    sellingPriceGold * quantityAdded;
+                product.sellingPriceGold = totalSellingPriceGold / totalQuantity;
+            }
+            if (sellingPriceSilver !== undefined) {
+                const totalSellingPriceSilver = (product.sellingPriceSilver || 0) * product.quantity +
+                    sellingPriceSilver * quantityAdded;
+                product.sellingPriceSilver = totalSellingPriceSilver / totalQuantity;
+            }
+            if (sellingPriceBronze !== undefined) {
+                const totalSellingPriceBronze = (product.sellingPriceBronze || 0) * product.quantity +
+                    sellingPriceBronze * quantityAdded;
+                product.sellingPriceBronze = totalSellingPriceBronze / totalQuantity;
+            }
         }
         product.quantity = totalQuantity;
         product.isBelowStockLimit = product.quantity <= product.stockLimit;
         product.isActive = product.quantity > 0;
         await product.save();
         const receivingNote = new this.receivingNoteModel({
-            product: productId,
-            quantityAdded,
-            purchasePrice,
-            sellingPriceGold,
-            sellingPriceSilver,
-            sellingPriceBronze,
-            supplier: supplierId,
+            items: [
+                {
+                    product: productId,
+                    quantityAdded,
+                    purchasePrice,
+                    sellingPriceGold,
+                    sellingPriceSilver,
+                    sellingPriceBronze,
+                },
+            ],
+            supplier: supplier,
         });
         await receivingNote.save();
         return product;
@@ -152,35 +174,139 @@ let ProductsService = class ProductsService {
         await finishedProduct.save();
         return finishedProduct;
     }
-    async findNormalProducts(page = 1, limit = 10, search) {
-        const query = { isRawMaterial: false };
+    async updateProductStock(orderItems) {
+        for (const item of orderItems) {
+            const product = await this.productModel.findById(item.product).exec();
+            if (!product) {
+                throw new common_1.NotFoundException(`Product with ID ${item.product} not found`);
+            }
+            if (product.quantity < item.quantity) {
+                throw new Error(`Insufficient stock for product ${product.name}`);
+            }
+            product.quantity -= item.quantity;
+            await product.save();
+        }
+    }
+    async addQuantities(receivingNoteMultipleDto) {
+        const { items, supplier } = receivingNoteMultipleDto;
+        const updatedProducts = [];
+        for (const productData of items) {
+            const { productId, quantityAdded, purchasePrice, sellingPriceGold, sellingPriceSilver, sellingPriceBronze, } = productData;
+            const product = await this.productModel.findById(productId).exec();
+            if (!product) {
+                throw new common_1.NotFoundException(`Product with ID ${productId} not found`);
+            }
+            const totalQuantity = product.quantity + quantityAdded;
+            const totalPurchasePrice = product.purchasePrice * product.quantity +
+                purchasePrice * quantityAdded;
+            product.purchasePrice = totalPurchasePrice / totalQuantity;
+            if (!product.isRawMaterial) {
+                if (sellingPriceGold !== undefined) {
+                    const totalSellingPriceGold = (product.sellingPriceGold || 0) * product.quantity +
+                        sellingPriceGold * quantityAdded;
+                    product.sellingPriceGold = totalSellingPriceGold / totalQuantity;
+                }
+                if (sellingPriceSilver !== undefined) {
+                    const totalSellingPriceSilver = (product.sellingPriceSilver || 0) * product.quantity +
+                        sellingPriceSilver * quantityAdded;
+                    product.sellingPriceSilver = totalSellingPriceSilver / totalQuantity;
+                }
+                if (sellingPriceBronze !== undefined) {
+                    const totalSellingPriceBronze = (product.sellingPriceBronze || 0) * product.quantity +
+                        sellingPriceBronze * quantityAdded;
+                    product.sellingPriceBronze = totalSellingPriceBronze / totalQuantity;
+                }
+            }
+            product.quantity = totalQuantity;
+            product.isBelowStockLimit = product.quantity <= product.stockLimit;
+            product.isActive = product.quantity > 0;
+            await product.save();
+            updatedProducts.push(product);
+        }
+        const receivingNote = new this.receivingNoteModel({
+            items: items.map((productData) => ({
+                product: productData.productId,
+                quantityAdded: productData.quantityAdded,
+                purchasePrice: productData.purchasePrice,
+                sellingPriceGold: productData.sellingPriceGold,
+                sellingPriceSilver: productData.sellingPriceSilver,
+                sellingPriceBronze: productData.sellingPriceBronze,
+            })),
+            supplier: supplier,
+        });
+        await receivingNote.save();
+        return updatedProducts;
+    }
+    async editQuantity(editQuantityDto) {
+        const { productId, quantityChange } = editQuantityDto;
+        const product = await this.productModel.findById(productId).exec();
+        if (!product) {
+            throw new common_1.NotFoundException(`Product with ID ${productId} not found`);
+        }
+        const newQuantity = product.quantity + quantityChange;
+        if (newQuantity < 0) {
+            throw new common_1.BadRequestException("Quantity cannot be negative");
+        }
+        product.quantity = newQuantity;
+        product.isBelowStockLimit = product.quantity <= product.stockLimit;
+        product.isActive = product.quantity > 0;
+        await product.save();
+        return product;
+    }
+    async findAllReceivingNotes(page = 1, limit = 10, search) {
+        const query = {};
         if (search) {
-            query.name = { $regex: search, $options: "i" };
+            const matchingProducts = await this.productModel
+                .find({
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { description: { $regex: search, $options: "i" } },
+                ],
+            }, "_id")
+                .exec();
+            const matchingSuppliers = await this.supplierModel
+                .find({
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { contact: { $regex: search, $options: "i" } },
+                    { address: { $regex: search, $options: "i" } },
+                ],
+            }, "_id")
+                .exec();
+            const productIds = matchingProducts.map((product) => product._id);
+            const suppliers = matchingSuppliers.map((supplier) => supplier._id);
+            if (productIds.length > 0 || suppliers.length > 0) {
+                query.$or = [
+                    { "items.product": { $in: productIds } },
+                    { supplier: { $in: suppliers } },
+                ];
+            }
+            else {
+                return { data: [], total: 0 };
+            }
         }
         const [data, total] = await Promise.all([
-            this.productModel
+            this.receivingNoteModel
                 .find(query)
+                .populate("items.product", "name description quantity isRawMaterial unit")
+                .populate("supplier", "name contact address")
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .exec(),
-            this.productModel.countDocuments(query).exec(),
+            this.receivingNoteModel.countDocuments(query).exec(),
         ]);
         return { data, total };
     }
-    async findRawMaterials(page = 1, limit = 10, search) {
-        const query = { isRawMaterial: true };
-        if (search) {
-            query.name = { $regex: search, $options: "i" };
+    async findOneReceivingNote(id) {
+        const receivingNote = await this.receivingNoteModel
+            .findById(id)
+            .populate("items.product", "name description quantity isRawMaterial unit")
+            .populate("supplier", "name contact address")
+            .exec();
+        if (!receivingNote) {
+            throw new common_1.NotFoundException(`Receiving note with ID ${id} not found`);
         }
-        const [data, total] = await Promise.all([
-            this.productModel
-                .find(query)
-                .skip((page - 1) * limit)
-                .limit(limit)
-                .exec(),
-            this.productModel.countDocuments(query).exec(),
-        ]);
-        return { data, total };
+        return receivingNote;
     }
 };
 exports.ProductsService = ProductsService;
@@ -188,7 +314,9 @@ exports.ProductsService = ProductsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(product_schema_1.Product.name)),
     __param(1, (0, mongoose_1.InjectModel)(receiving_note_schema_1.ReceivingNote.name)),
+    __param(2, (0, mongoose_1.InjectModel)(supplier_schema_1.Supplier.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model])
 ], ProductsService);
 //# sourceMappingURL=products.service.js.map

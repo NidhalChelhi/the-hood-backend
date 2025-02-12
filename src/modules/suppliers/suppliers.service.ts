@@ -30,15 +30,23 @@ export class SuppliersService {
     }
   }
 
-  async findAllSuppliers(): Promise<Supplier[]> {
-    try {
-      return await this.supplierModel.find();
-    } catch (error) {
-      this.logger.error("Error fetching suppliers : ", error.message);
-      throw new BadRequestException(
-        `Failed to fetch suppliers : ${error.message}`
-      );
-    }
+  async findAllSuppliers(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ): Promise<{ data: Supplier[]; total: number }> {
+    const query = search ? { name: { $regex: search, $options: "i" } } : {};
+
+    const [data, total] = await Promise.all([
+      this.supplierModel
+        .find(query)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      this.supplierModel.countDocuments(query).exec(),
+    ]);
+
+    return { data, total };
   }
 
   async findSupplierById(id: string): Promise<Supplier> {

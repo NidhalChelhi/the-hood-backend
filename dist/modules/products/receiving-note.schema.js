@@ -16,29 +16,21 @@ let ReceivingNote = class ReceivingNote extends mongoose_2.Document {
 };
 exports.ReceivingNote = ReceivingNote;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: "Product", required: true }),
-    __metadata("design:type", mongoose_2.Types.ObjectId)
-], ReceivingNote.prototype, "product", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Number)
-], ReceivingNote.prototype, "quantityAdded", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", Number)
-], ReceivingNote.prototype, "purchasePrice", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], ReceivingNote.prototype, "sellingPriceGold", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], ReceivingNote.prototype, "sellingPriceSilver", void 0);
-__decorate([
-    (0, mongoose_1.Prop)(),
-    __metadata("design:type", Number)
-], ReceivingNote.prototype, "sellingPriceBronze", void 0);
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                product: { type: mongoose_2.Types.ObjectId, ref: "Product", required: true },
+                quantityAdded: { type: Number, required: true },
+                purchasePrice: { type: Number, required: true },
+                sellingPriceGold: { type: Number },
+                sellingPriceSilver: { type: Number },
+                sellingPriceBronze: { type: Number },
+            },
+        ],
+        required: true,
+    }),
+    __metadata("design:type", Array)
+], ReceivingNote.prototype, "items", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: "Supplier" }),
     __metadata("design:type", mongoose_2.Types.ObjectId)

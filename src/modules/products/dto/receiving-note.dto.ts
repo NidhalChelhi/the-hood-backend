@@ -27,5 +27,17 @@ export class ReceivingNoteDTO {
 
   @IsNotEmpty()
   @IsString()
-  supplierId: string;
+  supplier: string;
+}
+
+export class ReceivingNoteMultipleDTO {
+  items: {
+    productId: string;
+    quantityAdded: number;
+    purchasePrice: number;
+    sellingPriceGold?: number;
+    sellingPriceSilver?: number;
+    sellingPriceBronze?: number;
+  }[];
+  supplier: string;
 }

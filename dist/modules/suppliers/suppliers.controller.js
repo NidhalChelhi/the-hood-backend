@@ -25,8 +25,8 @@ let SuppliersController = class SuppliersController {
     async createSupplier(createSupplierDTO) {
         return this.suppliersService.createSupplier(createSupplierDTO);
     }
-    async findAllSuppliers() {
-        return this.suppliersService.findAllSuppliers();
+    async findAll(page = 1, limit = 10, search) {
+        return this.suppliersService.findAllSuppliers(page, limit, search);
     }
     async findSupplierById(id) {
         return this.suppliersService.findSupplierById(id);
@@ -49,10 +49,13 @@ __decorate([
 ], SuppliersController.prototype, "createSupplier", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)("page")),
+    __param(1, (0, common_1.Query)("limit")),
+    __param(2, (0, common_1.Query)("search")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [Number, Number, String]),
     __metadata("design:returntype", Promise)
-], SuppliersController.prototype, "findAllSuppliers", null);
+], SuppliersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id")),
