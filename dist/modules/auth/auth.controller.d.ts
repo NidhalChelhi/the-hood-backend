@@ -7,5 +7,6 @@ export declare class AuthController {
         password: string;
     }): Promise<{
         access_token: string;
+        userRole: any;
     }>;
 }

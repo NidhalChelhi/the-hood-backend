@@ -9,6 +9,7 @@ import {
   HttpException,
   HttpStatus,
   Query,
+  Req,
 } from "@nestjs/common";
 import { OrdersService } from "./orders.service";
 import { CreateOrderDTO } from "./dto/create-order.dto";
@@ -52,6 +53,17 @@ export class OrdersController {
         HttpStatus.BAD_REQUEST
       );
     }
+  }
+
+  @Get("own")
+  async findUserOrders(
+    @Req() request : any,
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("filter") filter?: string
+
+  ){
+    return this.ordersService.findAll(page, limit, request.user.username, filter);
   }
 
   @Get()

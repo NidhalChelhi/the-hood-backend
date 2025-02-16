@@ -40,6 +40,9 @@ let OrdersController = class OrdersController {
     async findAll(page = 1, limit = 10, search, filter) {
         return this.ordersService.findAll(page, limit, search, filter);
     }
+    async findUserOrders(request, page = 1, limit = 10, filter) {
+        return this.ordersService.findAll(page, limit, request.user.userId, filter);
+    }
     async getOrder(orderId) {
         const order = await this.ordersService.findOne(orderId);
         if (!order) {
@@ -75,6 +78,16 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, String, String]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)("own"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)("page")),
+    __param(2, (0, common_1.Query)("limit")),
+    __param(3, (0, common_1.Query)("filter")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "findUserOrders", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id")),

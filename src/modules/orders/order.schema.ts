@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
-import { OrderStatus } from "src/common/enums/order-status.enum";
+import { OrderStatus } from "../../common/enums/order-status.enum";
 
 @Schema({ timestamps: true })
 export class Order extends Document {

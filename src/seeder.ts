@@ -16,6 +16,7 @@ import { UserRole } from "./common/enums/roles.enum";
 import { OrderStatus } from "./common/enums/order-status.enum";
 import { DeliveryNoteStatus } from "./common/enums/delivery-note-status";
 import { LocationRank } from "./common/enums/location-rank.enum";
+import * as bcrypt from 'bcrypt'
 
 // MongoDB connection URI
 const MONGO_URI =
@@ -52,14 +53,14 @@ async function seedUsers(): Promise<Types.ObjectId[]> {
   const users = [
     {
       username: "admin",
-      password: "admin123", // In a real app, hash the password!
+      password: await bcrypt.hash("admin123", 10), // In a real app, hash the password!
       role: UserRole.Admin,
       email: "admin@thehood.com",
       phoneNumber: "1234567890",
     },
     {
       username: "manager_menzah",
-      password: "manager123",
+      password: await bcrypt.hash("manager123", 10),
       role: UserRole.RestaurantManager,
       email: "manager_menzah@thehood.com",
       phoneNumber: "0987654321",
@@ -71,7 +72,7 @@ async function seedUsers(): Promise<Types.ObjectId[]> {
     },
     {
       username: "manager_bardo",
-      password: "manager123",
+      password: await bcrypt.hash("manager123", 10),
       role: UserRole.RestaurantManager,
       email: "manager_bardo@thehood.com",
       phoneNumber: "0987654322",
@@ -83,7 +84,7 @@ async function seedUsers(): Promise<Types.ObjectId[]> {
     },
     {
       username: "manager_aouina",
-      password: "manager123",
+      password: await bcrypt.hash("manager123", 10),
       role: UserRole.RestaurantManager,
       email: "manager_aouina@thehood.com",
       phoneNumber: "0987654323",

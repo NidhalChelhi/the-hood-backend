@@ -19,6 +19,10 @@ export declare class OrdersController {
         data: Order[];
         total: number;
     }>;
+    findUserOrders(request: any, page?: number, limit?: number, filter?: string): Promise<{
+        data: Order[];
+        total: number;
+    }>;
     getOrder(orderId: string): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
         _id: unknown;
     }> & {
