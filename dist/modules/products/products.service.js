@@ -55,6 +55,9 @@ let ProductsService = class ProductsService {
         ]);
         return { data, total };
     }
+    async findAllUnpaginated() {
+        return await this.productModel.find().exec();
+    }
     async findOne(id) {
         const product = await this.productModel.findById(id).exec();
         if (!product) {

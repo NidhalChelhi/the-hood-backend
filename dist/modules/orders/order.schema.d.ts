@@ -1,5 +1,5 @@
 import { Document, Types } from "mongoose";
-import { OrderStatus } from "src/common/enums/order-status.enum";
+import { OrderStatus } from "../../common/enums/order-status.enum";
 export declare class Order extends Document {
     createdBy: Types.ObjectId;
     orderItems: {

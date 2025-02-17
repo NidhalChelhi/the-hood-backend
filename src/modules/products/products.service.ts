@@ -66,6 +66,10 @@ export class ProductsService {
     return { data, total };
   }
 
+  async findAllUnpaginated(){
+    return await this.productModel.find().exec();
+  }
+
   async findOne(id: string): Promise<Product> {
     const product = await this.productModel.findById(id).exec();
     if (!product) {

@@ -19,6 +19,7 @@ import { User, UserSchema } from "../users/user.schema";
     UsersModule,
   ],
   controllers: [OrdersController],
+
   providers: [OrdersService],
 
   exports: [OrdersService],

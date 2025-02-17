@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, ValidateNested } from "class-validator";
+import { IsArray, IsEmpty, IsNotEmpty, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 
 class OrderItemDTO {
@@ -8,12 +8,12 @@ class OrderItemDTO {
   @IsNotEmpty()
   quantity: number;
 
-  @IsNotEmpty()
+  @IsEmpty()
   price: number;
 }
 
 export class CreateOrderDTO {
-  @IsNotEmpty()
+  @IsEmpty()
   createdBy: string;
 
   @IsArray()

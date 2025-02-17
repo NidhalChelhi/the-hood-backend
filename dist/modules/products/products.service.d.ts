@@ -17,6 +17,11 @@ export declare class ProductsService {
         data: Product[];
         total: number;
     }>;
+    findAllUnpaginated(): Promise<(import("mongoose").Document<unknown, {}, Product> & Product & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     findOne(id: string): Promise<Product>;
     update(id: string, updateProductDto: UpdateProductDTO): Promise<Product>;
     remove(id: string): Promise<Product>;

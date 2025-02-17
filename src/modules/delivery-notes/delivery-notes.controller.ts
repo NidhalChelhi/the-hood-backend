@@ -4,6 +4,7 @@ import {
   NotFoundException,
   Param,
   Query,
+  Req,
 } from "@nestjs/common";
 import { DeliveryNotesService } from "./delivery-notes.service";
 import { Public } from "src/common/decorators/public.decorator";
@@ -13,6 +14,15 @@ import { DeliveryNote } from "./delivery-note.schema";
 @Controller("delivery-notes")
 export class DeliveryNotesController {
   constructor(private readonly deliveryNotesService: DeliveryNotesService) {}
+  @Get("own")
+  async findOwn(
+    @Req() request : any,
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("filter") filter?: string,
+  ){
+    return this.deliveryNotesService.findAll(page, limit, request.user.username, filter);
+  }
 
   @Get()
   async findAll(

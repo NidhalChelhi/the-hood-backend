@@ -40,6 +40,10 @@ export class ProductsController {
   ): Promise<{ data: Product[]; total: number }> {
     return this.productsService.findAll(page, limit, search, filter);
   }
+  @Get("all")
+  async unpaginatedProducts() : Promise<Product[]>{
+    return this.productsService.findAllUnpaginated();
+  }
 
   @Get(":id")
   async findOne(@Param("id") id: string): Promise<Product> {

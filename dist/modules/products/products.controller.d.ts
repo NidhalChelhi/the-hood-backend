@@ -14,6 +14,7 @@ export declare class ProductsController {
         data: Product[];
         total: number;
     }>;
+    unpaginatedProducts(): Promise<Product[]>;
     findOne(id: string): Promise<Product>;
     update(id: string, updateProductDto: UpdateProductDTO): Promise<Product>;
     remove(id: string): Promise<Product>;

@@ -12,6 +12,7 @@ const roles_enum_1 = require("./common/enums/roles.enum");
 const order_status_enum_1 = require("./common/enums/order-status.enum");
 const delivery_note_status_1 = require("./common/enums/delivery-note-status");
 const location_rank_enum_1 = require("./common/enums/location-rank.enum");
+const bcrypt = require("bcrypt");
 const MONGO_URI = process.env.MONGO_URI ||
     "mongodb+srv://nidhalelchelhi:dVqy451rgndp4utW@cluster0.ijtcb.mongodb.net/the-hood";
 async function connectToDatabase() {
@@ -41,14 +42,14 @@ async function seedUsers() {
     const users = [
         {
             username: "admin",
-            password: "admin123",
+            password: await bcrypt.hash("admin123", 10),
             role: roles_enum_1.UserRole.Admin,
             email: "admin@thehood.com",
             phoneNumber: "1234567890",
         },
         {
             username: "manager_menzah",
-            password: "manager123",
+            password: await bcrypt.hash("manager123", 10),
             role: roles_enum_1.UserRole.RestaurantManager,
             email: "manager_menzah@thehood.com",
             phoneNumber: "0987654321",
@@ -60,7 +61,7 @@ async function seedUsers() {
         },
         {
             username: "manager_bardo",
-            password: "manager123",
+            password: await bcrypt.hash("manager123", 10),
             role: roles_enum_1.UserRole.RestaurantManager,
             email: "manager_bardo@thehood.com",
             phoneNumber: "0987654322",
@@ -72,7 +73,7 @@ async function seedUsers() {
         },
         {
             username: "manager_aouina",
-            password: "manager123",
+            password: await bcrypt.hash("manager123", 10),
             role: roles_enum_1.UserRole.RestaurantManager,
             email: "manager_aouina@thehood.com",
             phoneNumber: "0987654323",
@@ -341,9 +342,14 @@ async function seedDatabase() {
             .distinct("_id"));
         await seedDeliveryNotes(orderIds);
         console.log("Database seeding completed!");
+        await mongoose_1.connection.close();
     }
     catch (error) {
         console.error("Error during database seeding:", error);
+        await mongoose_1.connection.close();
     }
 }
+seedDatabase().then(() => {
+    console.log("Seeding successful");
+});
 //# sourceMappingURL=seeder.js.map

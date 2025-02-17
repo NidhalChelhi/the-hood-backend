@@ -23,14 +23,14 @@ __decorate([
     __metadata("design:type", Number)
 ], OrderItemDTO.prototype, "quantity", void 0);
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEmpty)(),
     __metadata("design:type", Number)
 ], OrderItemDTO.prototype, "price", void 0);
 class CreateOrderDTO {
 }
 exports.CreateOrderDTO = CreateOrderDTO;
 __decorate([
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEmpty)(),
     __metadata("design:type", String)
 ], CreateOrderDTO.prototype, "createdBy", void 0);
 __decorate([

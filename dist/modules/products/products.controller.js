@@ -31,6 +31,9 @@ let ProductsController = class ProductsController {
     async findAll(page = 1, limit = 10, search, filter) {
         return this.productsService.findAll(page, limit, search, filter);
     }
+    async unpaginatedProducts() {
+        return this.productsService.findAllUnpaginated();
+    }
     async findOne(id) {
         return this.productsService.findOne(id);
     }
@@ -80,6 +83,12 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number, String, String]),
     __metadata("design:returntype", Promise)
 ], ProductsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)("all"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], ProductsController.prototype, "unpaginatedProducts", null);
 __decorate([
     (0, common_1.Get)(":id"),
     __param(0, (0, common_1.Param)("id")),

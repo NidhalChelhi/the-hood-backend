@@ -406,9 +406,13 @@ export async function seedDatabase() {
       .find()
       .distinct("_id")) as Types.ObjectId[];
     await seedDeliveryNotes(orderIds);
-
     console.log("Database seeding completed!");
+    await connection.close();
   } catch (error) {
     console.error("Error during database seeding:", error);
+    await connection.close();
   }
 }
+seedDatabase().then(() => {
+  console.log("Seeding successful");
+});

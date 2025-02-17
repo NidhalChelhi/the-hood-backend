@@ -5,7 +5,7 @@ import { Order } from "./order.schema";
 export declare class OrdersController {
     private readonly ordersService;
     constructor(ordersService: OrdersService);
-    createOrder(createOrderDTO: CreateOrderDTO): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+    createOrder(createOrderDTO: CreateOrderDTO, request: any): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
         _id: unknown;
     }> & {
         __v: number;
@@ -15,11 +15,11 @@ export declare class OrdersController {
     }> & {
         __v: number;
     }>;
-    findAll(page?: number, limit?: number, search?: string, filter?: string): Promise<{
+    findUserOrders(request: any, page?: number, limit?: number, filter?: string): Promise<{
         data: Order[];
         total: number;
     }>;
-    findUserOrders(request: any, page?: number, limit?: number, filter?: string): Promise<{
+    findAll(page?: number, limit?: number, search?: string, filter?: string): Promise<{
         data: Order[];
         total: number;
     }>;

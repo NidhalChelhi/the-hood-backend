@@ -1,5 +1,5 @@
 import { Document, Types } from "mongoose";
-import { DeliveryNoteStatus } from "src/common/enums/delivery-note-status";
+import { DeliveryNoteStatus } from "../../common/enums/delivery-note-status";
 export declare class DeliveryNote extends Document {
     order: Types.ObjectId;
     status: DeliveryNoteStatus;

@@ -14,18 +14,19 @@ import {
 import { OrdersService } from "./orders.service";
 import { CreateOrderDTO } from "./dto/create-order.dto";
 import { UpdateOrderDTO } from "./dto/update-order.dto";
-import { Public } from "src/common/decorators/public.decorator";
+//import { Public } from "src/common/decorators/public.decorator";
 import { Order } from "./order.schema";
+//import { AuthCompositeGuard } from "src/common/guards/auth-composite.guard";
 
-@Public()
 @Controller("orders")
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
-  async createOrder(@Body() createOrderDTO: CreateOrderDTO) {
+  async createOrder(@Body() createOrderDTO: CreateOrderDTO, @Req() request : any) {
     // handle errors
     try {
+      createOrderDTO.createdBy = request.user.userId;
       return await this.ordersService.createOrder(createOrderDTO);
     } catch (error) {
       throw new HttpException(
@@ -63,6 +64,7 @@ export class OrdersController {
     @Query("filter") filter?: string
 
   ){
+    console.log(request.user);
     return this.ordersService.findAll(page, limit, request.user.username, filter);
   }
 

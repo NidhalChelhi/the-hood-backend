@@ -20,6 +20,9 @@ let DeliveryNotesController = class DeliveryNotesController {
     constructor(deliveryNotesService) {
         this.deliveryNotesService = deliveryNotesService;
     }
+    async findOwn(request, page = 1, limit = 10, filter) {
+        return this.deliveryNotesService.findAll(page, limit, request.user.username, filter);
+    }
     async findAll(page = 1, limit = 10, search, filter) {
         return this.deliveryNotesService.findAll(page, limit, search, filter);
     }
@@ -32,6 +35,16 @@ let DeliveryNotesController = class DeliveryNotesController {
     }
 };
 exports.DeliveryNotesController = DeliveryNotesController;
+__decorate([
+    (0, common_1.Get)("own"),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)("page")),
+    __param(2, (0, common_1.Query)("limit")),
+    __param(3, (0, common_1.Query)("filter")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], DeliveryNotesController.prototype, "findOwn", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)("page")),
