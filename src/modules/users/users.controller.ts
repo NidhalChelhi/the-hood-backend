@@ -20,6 +20,10 @@ import { Public } from "src/common/decorators/public.decorator";
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get("managers")
+  async findManagers(){
+    return this.usersService.findManagers();
+  }
   @Post()
   async create(@Body() createUserDTO: CreateUserDTO) {
     return this.usersService.createUser(createUserDTO);

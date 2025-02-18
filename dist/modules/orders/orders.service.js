@@ -78,6 +78,9 @@ let OrdersService = class OrdersService {
         }
         return order;
     }
+    async findMultiple(orderIds) {
+        return await this.orderModel.find({ _id: { $in: orderIds } });
+    }
     async createOrder(createOrderDTO) {
         const { createdBy, orderItems } = createOrderDTO;
         const manager = await this.usersService.findOneById(createdBy);

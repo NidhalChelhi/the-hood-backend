@@ -8,6 +8,11 @@ export declare class UsersService {
     private userModel;
     constructor(userModel: Model<User>);
     createUser(createUserDTO: CreateUserDTO): Promise<User>;
+    findManagers(): Promise<(import("mongoose").Document<unknown, {}, User> & User & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     findAll(searchQuery: UserQueryDTO): Promise<PaginatedUsers>;
     countDocs(options: RootFilterQuery<User>): Promise<number>;
     findLikeUserName(username: string): Promise<User[]>;

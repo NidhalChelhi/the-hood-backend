@@ -23,6 +23,9 @@ let DeliveryNotesController = class DeliveryNotesController {
     async findOwn(request, page = 1, limit = 10, filter) {
         return this.deliveryNotesService.findAll(page, limit, request.user.username, filter);
     }
+    async findPending() {
+        return this.deliveryNotesService.findPending();
+    }
     async findAll(page = 1, limit = 10, search, filter) {
         return this.deliveryNotesService.findAll(page, limit, search, filter);
     }
@@ -45,6 +48,12 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Number, String]),
     __metadata("design:returntype", Promise)
 ], DeliveryNotesController.prototype, "findOwn", null);
+__decorate([
+    (0, common_1.Get)("pending"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], DeliveryNotesController.prototype, "findPending", null);
 __decorate([
     (0, common_1.Get)(),
     __param(0, (0, common_1.Query)("page")),

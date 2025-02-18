@@ -97,6 +97,9 @@ export class OrdersService {
 
     return order;
   }
+  async findMultiple(orderIds : string[]){
+    return await this.orderModel.find({ _id : { $in : orderIds }});
+  }
 
   async createOrder(createOrderDTO: CreateOrderDTO) {
     const { createdBy, orderItems } = createOrderDTO;

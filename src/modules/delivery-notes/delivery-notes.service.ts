@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 import { DeliveryNote } from "./delivery-note.schema";
 import { CreateDeliveryNoteDTO } from "./dto/create-delivery-note.dto";
 import { User } from "../users/user.schema";
 import { Order } from "../orders/order.schema";
+import { DeliveryNoteStatus } from "src/common/enums/delivery-note-status";
 
 @Injectable()
 export class DeliveryNotesService {
@@ -133,5 +134,37 @@ export class DeliveryNotesService {
     }
 
     return deliveryNote;
+  }
+  async findPending(){
+    return await this.deliveryNoteModel.find({status : DeliveryNoteStatus.PENDING})
+      .populate({
+        path: "order",
+        populate: {
+          path: "createdBy",
+          model: "User",
+          select: "_id username email phoneNumber location",
+        },
+      })
+      .populate({
+        path: "order",
+        populate: {
+          path: "orderItems.product",
+          model: "Product",
+        },
+      })
+      .populate({
+        path: "order",
+        populate: {
+          path: "originalOrderItems.product",
+          model: "Product",
+        },
+      })
+      .exec();
+  }
+  async findOneByOrderId(orderId : string){
+    return await this.deliveryNoteModel.findOne({order : new Types.ObjectId(orderId)})
+  }
+  async findManyByOrderIds(ordersId : string[]){
+    return await this.deliveryNoteModel.find({order : { $in : ordersId.map((elem) => new Types.ObjectId(elem))}});
   }
 }

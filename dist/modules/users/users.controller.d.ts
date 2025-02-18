@@ -5,6 +5,11 @@ import { UserQueryDTO } from "./dto/user-query.dto";
 export declare class UsersController {
     private readonly usersService;
     constructor(usersService: UsersService);
+    findManagers(): Promise<(import("mongoose").Document<unknown, {}, import("./user.schema").User> & import("./user.schema").User & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     create(createUserDTO: CreateUserDTO): Promise<import("./user.schema").User>;
     findAll(serachQuery: UserQueryDTO): Promise<import("./dto/paginated-user.dto").PaginatedUsers>;
     findOne(id: string): Promise<import("./user.schema").User>;

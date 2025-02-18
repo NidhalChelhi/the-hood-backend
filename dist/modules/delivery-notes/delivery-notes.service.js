@@ -19,6 +19,7 @@ const mongoose_2 = require("mongoose");
 const delivery_note_schema_1 = require("./delivery-note.schema");
 const user_schema_1 = require("../users/user.schema");
 const order_schema_1 = require("../orders/order.schema");
+const delivery_note_status_1 = require("../../common/enums/delivery-note-status");
 let DeliveryNotesService = class DeliveryNotesService {
     constructor(deliveryNoteModel, userModel, orderModel) {
         this.deliveryNoteModel = deliveryNoteModel;
@@ -119,6 +120,38 @@ let DeliveryNotesService = class DeliveryNotesService {
             throw new common_1.NotFoundException(`Delivery note with ID ${deliveryNoteId} not found`);
         }
         return deliveryNote;
+    }
+    async findPending() {
+        return await this.deliveryNoteModel.find({ status: delivery_note_status_1.DeliveryNoteStatus.PENDING })
+            .populate({
+            path: "order",
+            populate: {
+                path: "createdBy",
+                model: "User",
+                select: "_id username email phoneNumber location",
+            },
+        })
+            .populate({
+            path: "order",
+            populate: {
+                path: "orderItems.product",
+                model: "Product",
+            },
+        })
+            .populate({
+            path: "order",
+            populate: {
+                path: "originalOrderItems.product",
+                model: "Product",
+            },
+        })
+            .exec();
+    }
+    async findOneByOrderId(orderId) {
+        return await this.deliveryNoteModel.findOne({ order: new mongoose_2.Types.ObjectId(orderId) });
+    }
+    async findManyByOrderIds(ordersId) {
+        return await this.deliveryNoteModel.find({ order: { $in: ordersId.map((elem) => new mongoose_2.Types.ObjectId(elem)) } });
     }
 };
 exports.DeliveryNotesService = DeliveryNotesService;

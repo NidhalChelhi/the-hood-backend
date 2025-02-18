@@ -32,7 +32,6 @@ let AuthCompositeGuard = AuthCompositeGuard_1 = class AuthCompositeGuard {
             return true;
         }
         const jwtValid = await this.jwtAuthGuard.canActivate(context);
-        console.log("Jina lena ??");
         if (!jwtValid)
             return false;
         return this.rolesGuard.canActivate(context);

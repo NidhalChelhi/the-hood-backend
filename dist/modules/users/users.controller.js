@@ -23,6 +23,9 @@ let UsersController = class UsersController {
     constructor(usersService) {
         this.usersService = usersService;
     }
+    async findManagers() {
+        return this.usersService.findManagers();
+    }
     async create(createUserDTO) {
         return this.usersService.createUser(createUserDTO);
     }
@@ -45,6 +48,12 @@ let UsersController = class UsersController {
     }
 };
 exports.UsersController = UsersController;
+__decorate([
+    (0, common_1.Get)("managers"),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "findManagers", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

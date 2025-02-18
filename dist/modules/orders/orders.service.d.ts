@@ -22,6 +22,11 @@ export declare class OrdersService {
     }> & {
         __v: number;
     }>;
+    findMultiple(orderIds: string[]): Promise<(import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     createOrder(createOrderDTO: CreateOrderDTO): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
         _id: unknown;
     }> & {

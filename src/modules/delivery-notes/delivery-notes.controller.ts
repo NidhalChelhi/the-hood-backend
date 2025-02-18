@@ -23,6 +23,10 @@ export class DeliveryNotesController {
   ){
     return this.deliveryNotesService.findAll(page, limit, request.user.username, filter);
   }
+  @Get("pending")
+  async findPending(){
+    return this.deliveryNotesService.findPending();
+  }
 
   @Get()
   async findAll(

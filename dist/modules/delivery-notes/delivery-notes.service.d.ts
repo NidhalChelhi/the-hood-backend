@@ -22,4 +22,19 @@ export declare class DeliveryNotesService {
     }> & {
         __v: number;
     }>;
+    findPending(): Promise<(import("mongoose").Document<unknown, {}, DeliveryNote> & DeliveryNote & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
+    findOneByOrderId(orderId: string): Promise<import("mongoose").Document<unknown, {}, DeliveryNote> & DeliveryNote & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }>;
+    findManyByOrderIds(ordersId: string[]): Promise<(import("mongoose").Document<unknown, {}, DeliveryNote> & DeliveryNote & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
 }

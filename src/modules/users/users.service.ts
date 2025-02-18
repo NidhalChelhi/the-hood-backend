@@ -44,6 +44,9 @@ export class UsersService {
     return newUser.save();
   }
 
+  async findManagers(){
+    return await this.userModel.find({role : UserRole.RestaurantManager}).select("-password");
+  }
   async findAll(searchQuery: UserQueryDTO): Promise<PaginatedUsers> {
     const options: RootFilterQuery<User> = { $and: [] };
     if (searchQuery.name) {
@@ -92,6 +95,7 @@ export class UsersService {
 
     const users = await query
       .skip((pageNumber - 1) * limit)
+      .select("-password")
       .limit(limit)
       .exec();
     return {

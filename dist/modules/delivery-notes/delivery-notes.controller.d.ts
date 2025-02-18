@@ -7,6 +7,11 @@ export declare class DeliveryNotesController {
         data: DeliveryNote[];
         total: number;
     }>;
+    findPending(): Promise<(import("mongoose").Document<unknown, {}, DeliveryNote> & DeliveryNote & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    })[]>;
     findAll(page?: number, limit?: number, search?: string, filter?: string): Promise<{
         data: DeliveryNote[];
         total: number;
