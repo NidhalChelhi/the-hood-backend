@@ -64,7 +64,6 @@ export class OrdersController {
     @Query("filter") filter?: string
 
   ){
-    console.log(request.user);
     return this.ordersService.findAll(page, limit, request.user.username, filter);
   }
 

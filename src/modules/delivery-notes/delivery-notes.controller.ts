@@ -7,10 +7,8 @@ import {
   Req,
 } from "@nestjs/common";
 import { DeliveryNotesService } from "./delivery-notes.service";
-import { Public } from "src/common/decorators/public.decorator";
 import { DeliveryNote } from "./delivery-note.schema";
 
-@Public()
 @Controller("delivery-notes")
 export class DeliveryNotesController {
   constructor(private readonly deliveryNotesService: DeliveryNotesService) {}

@@ -9,8 +9,6 @@ import { User } from "./user.schema";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import * as bcrypt from "bcrypt";
 import { UpdateUserDTO } from "./dto/update-user.dto";
-import { UserQueryDTO } from "./dto/user-query.dto";
-import { PaginatedUsers } from "./dto/paginated-user.dto";
 import { UserRole } from "src/common/enums/roles.enum";
 
 @Injectable()
@@ -47,63 +45,49 @@ export class UsersService {
   async findManagers(){
     return await this.userModel.find({role : UserRole.RestaurantManager}).select("-password");
   }
-  async findAll(searchQuery: UserQueryDTO): Promise<PaginatedUsers> {
-    const options: RootFilterQuery<User> = { $and: [] };
-    if (searchQuery.name) {
-      options.$and.push({
-        $expr: {
-          $regexMatch: {
-            input: "$username",
-            regex: searchQuery.name,
-            options: "i",
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+  ): Promise<{ data: User[]; total: number }> {
+    if (search) {
+      const [data, total] = await Promise.all([
+        this.userModel
+        .find(
+          {
+            $or: [
+              { username: { $regex: search, $options: "i" } },
+              { email: { $regex: search, $options: "i" } },
+            ],
           },
-        },
-      });
-    }
-    if (searchQuery.locationName) {
-      options.$and.push({
-        $expr: {
-          $regexMatch: {
-            input: "$location.name",
-            regex: searchQuery.locationName,
-            options: "i",
-          },
-        },
-      });
-    }
-    if (searchQuery.locationRank) {
-      options.$and.push({
-        "location.rank": searchQuery.locationRank,
-      });
-    }
-    const query = this.userModel.find(options);
-    if (searchQuery.sort) {
-      const sortCriteria = searchQuery.sort === "asc" ? 1 : -1;
-      query.sort({
-        username: sortCriteria,
-      });
-    }
-    const pageNumber = Math.max(searchQuery.page || 1, 1);
-    const limit = 10;
-    const totalElems = await this.countDocs(options);
-    const totalPages = Math.ceil(totalElems / limit);
-    if (pageNumber > totalPages && totalPages !== 0) {
-      throw new BadRequestException(
-        `Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`
-      );
+          "-password"
+        )
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+        this.userModel.countDocuments(
+          {
+            $or: [
+              { username: { $regex: search, $options: "i" } },
+              { email: { $regex: search, $options: "i" } },
+            ]
+          }
+        )
+      ])
+      return { data, total}
+    }else {
+      const [data, total] = await Promise.all([
+        this.userModel
+        .find({},"-password")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+        this.userModel.countDocuments()
+      ])
+      return { data, total}
+
     }
 
-    const users = await query
-      .skip((pageNumber - 1) * limit)
-      .select("-password")
-      .limit(limit)
-      .exec();
-    return {
-      users,
-      pageNumber,
-      totalElems,
-      totalPages,
-    };
   }
 
   async countDocs(options: RootFilterQuery<User>) {

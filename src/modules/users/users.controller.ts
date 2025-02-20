@@ -8,14 +8,13 @@ import {
   Body,
   NotFoundException,
   Query,
+  Req,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 import { CreateUserDTO } from "./dto/create-user.dto";
 import { UpdateUserDTO } from "./dto/update-user.dto";
-import { UserQueryDTO } from "./dto/user-query.dto";
-import { Public } from "src/common/decorators/public.decorator";
+import { User } from "./user.schema";
 
-@Public()
 @Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -24,14 +23,22 @@ export class UsersController {
   async findManagers(){
     return this.usersService.findManagers();
   }
+  @Get("own")
+  async findOwn(@Req() request : any){
+    return this.usersService.findOneById(request.user.userId);
+  }
   @Post()
   async create(@Body() createUserDTO: CreateUserDTO) {
     return this.usersService.createUser(createUserDTO);
   }
 
   @Get()
-  async findAll(@Query() serachQuery : UserQueryDTO) {
-    return this.usersService.findAll(serachQuery);
+  async findAll(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("search") search?: string,
+  ): Promise<{ data: User[]; total: number }> {
+    return this.usersService.findAll(page, limit, search);
   }
 
   @Get(":id")

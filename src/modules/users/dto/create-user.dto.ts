@@ -15,7 +15,7 @@ class LocationDTO {
 
   @IsString()
   @IsNotEmpty()
-  @IsEnum(["gold", "silver", "bronze"])
+  @IsEnum(["Gold", "Silver", "Bronze"])
   rank: string;
 
   @IsString()

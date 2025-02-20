@@ -46,60 +46,39 @@ let UsersService = class UsersService {
     async findManagers() {
         return await this.userModel.find({ role: roles_enum_1.UserRole.RestaurantManager }).select("-password");
     }
-    async findAll(searchQuery) {
-        const options = { $and: [] };
-        if (searchQuery.name) {
-            options.$and.push({
-                $expr: {
-                    $regexMatch: {
-                        input: "$username",
-                        regex: searchQuery.name,
-                        options: "i",
-                    },
-                },
-            });
+    async findAll(page = 1, limit = 10, search) {
+        if (search) {
+            const [data, total] = await Promise.all([
+                this.userModel
+                    .find({
+                    $or: [
+                        { username: { $regex: search, $options: "i" } },
+                        { email: { $regex: search, $options: "i" } },
+                    ],
+                }, "-password")
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .exec(),
+                this.userModel.countDocuments({
+                    $or: [
+                        { username: { $regex: search, $options: "i" } },
+                        { email: { $regex: search, $options: "i" } },
+                    ]
+                })
+            ]);
+            return { data, total };
         }
-        if (searchQuery.locationName) {
-            options.$and.push({
-                $expr: {
-                    $regexMatch: {
-                        input: "$location.name",
-                        regex: searchQuery.locationName,
-                        options: "i",
-                    },
-                },
-            });
+        else {
+            const [data, total] = await Promise.all([
+                this.userModel
+                    .find({}, "-password")
+                    .skip((page - 1) * limit)
+                    .limit(limit)
+                    .exec(),
+                this.userModel.countDocuments()
+            ]);
+            return { data, total };
         }
-        if (searchQuery.locationRank) {
-            options.$and.push({
-                "location.rank": searchQuery.locationRank,
-            });
-        }
-        const query = this.userModel.find(options);
-        if (searchQuery.sort) {
-            const sortCriteria = searchQuery.sort === "asc" ? 1 : -1;
-            query.sort({
-                username: sortCriteria,
-            });
-        }
-        const pageNumber = Math.max(searchQuery.page || 1, 1);
-        const limit = 10;
-        const totalElems = await this.countDocs(options);
-        const totalPages = Math.ceil(totalElems / limit);
-        if (pageNumber > totalPages && totalPages !== 0) {
-            throw new common_1.BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
-        }
-        const users = await query
-            .skip((pageNumber - 1) * limit)
-            .select("-password")
-            .limit(limit)
-            .exec();
-        return {
-            users,
-            pageNumber,
-            totalElems,
-            totalPages,
-        };
     }
     async countDocs(options) {
         return await this.userModel.countDocuments(options);

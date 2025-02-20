@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeliveryNotesController = void 0;
 const common_1 = require("@nestjs/common");
 const delivery_notes_service_1 = require("./delivery-notes.service");
-const public_decorator_1 = require("../../common/decorators/public.decorator");
 let DeliveryNotesController = class DeliveryNotesController {
     constructor(deliveryNotesService) {
         this.deliveryNotesService = deliveryNotesService;
@@ -72,7 +71,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], DeliveryNotesController.prototype, "findOne", null);
 exports.DeliveryNotesController = DeliveryNotesController = __decorate([
-    (0, public_decorator_1.Public)(),
     (0, common_1.Controller)("delivery-notes"),
     __metadata("design:paramtypes", [delivery_notes_service_1.DeliveryNotesService])
 ], DeliveryNotesController);

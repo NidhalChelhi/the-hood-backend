@@ -38,7 +38,6 @@ let OrdersController = class OrdersController {
         }
     }
     async findUserOrders(request, page = 1, limit = 10, filter) {
-        console.log(request.user);
         return this.ordersService.findAll(page, limit, request.user.username, filter);
     }
     async findAll(page = 1, limit = 10, search, filter) {

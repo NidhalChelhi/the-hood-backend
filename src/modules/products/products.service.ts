@@ -67,7 +67,7 @@ export class ProductsService {
   }
 
   async findAllUnpaginated(){
-    return await this.productModel.find().exec();
+    return await this.productModel.find({isRawMaterial : false}).exec();
   }
 
   async findOne(id: string): Promise<Product> {

@@ -22,7 +22,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsEnum)(["gold", "silver", "bronze"]),
+    (0, class_validator_1.IsEnum)(["Gold", "Silver", "Bronze"]),
     __metadata("design:type", String)
 ], LocationDTO.prototype, "rank", void 0);
 __decorate([
