@@ -11,9 +11,8 @@ import {
 import { ClientsService } from "./clients.service";
 import { CreateClientDto } from "./dto/create-client.dto";
 import { UpdateClientDto } from "./dto/update-client.dto";
-import { Roles } from "../../common/decorators/roles.decorator";
-import { ClientQueryDTO } from "./dto/client-query.dto";
 import { Public } from "src/common/decorators/public.decorator";
+import { Client } from "./clients.schema";
 
 //@Roles("restaurant_manager", "admin")
 @Public()
@@ -27,8 +26,21 @@ export class ClientsController {
   }
 
   @Get()
-  async findAll(@Query() searchQuery : ClientQueryDTO) {
-    return this.clientsService.findAll(searchQuery);
+  async findAll(
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 10,
+    @Query("search") search?: string,
+  ) : Promise<{data : Client[]; total : number}>{
+    return this.clientsService.findAll(page, limit, search);
+  }
+
+  @Post("points/:id")
+  async addPoints(@Param("id") id: string, @Body() body : { points : number }) {
+    return this.clientsService.addPoints(id, body.points);
+  }
+  @Post("pay/:id")
+  async pay(@Param("id") id: string, @Body() body : { points: number }) {
+    return this.clientsService.addPoints(id, -body.points);
   }
 
   @Get(":id")
@@ -49,8 +61,4 @@ export class ClientsController {
     return this.clientsService.removeClient(id);
   }
 
-  @Post("points/:id")
-  async addPoints(@Param("id") id: string, @Body() points: number) {
-    return this.addPoints(id, points);
-  }
 }
