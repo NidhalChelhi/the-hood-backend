@@ -16,6 +16,7 @@ import { UpdateProductDTO } from "./dto/update-product.dto";
 import { ConvertRawMaterialsDTO } from "./dto/convert-raw-materials.dto";
 import { EditQuantityDTO } from "./dto/edit-quantity.dto";
 import { Supplier } from "../suppliers/supplier.schema";
+import { SuppliersService } from "../suppliers/suppliers.service";
 
 @Injectable()
 export class ProductsService {
@@ -23,10 +24,16 @@ export class ProductsService {
     @InjectModel(Product.name) private readonly productModel: Model<Product>,
     @InjectModel(ReceivingNote.name)
     private readonly receivingNoteModel: Model<ReceivingNote>,
-    @InjectModel(Supplier.name) private readonly supplierModel: Model<Supplier>
+    @InjectModel(Supplier.name) private readonly supplierModel: Model<Supplier>,
+    private readonly supplierService : SuppliersService,
   ) {}
 
   async create(createProductDto: CreateProductDTO): Promise<Product> {
+    if(createProductDto.isRawMaterial){
+      if(!createProductDto.sellingPriceBronze || !createProductDto.sellingPriceSilver || !createProductDto.sellingPriceGold){
+        throw new BadRequestException(`Please provide selling prices for the product`);
+      }
+    }
     const createdProduct = new this.productModel(createProductDto);
     return createdProduct.save();
   }
@@ -340,6 +347,11 @@ export class ProductsService {
     });
 
     await receivingNote.save();
+    await this.supplierService.addProucts(items.map((item) => ({
+      productId : item.productId,
+      purchasePrice : item.purchasePrice,
+      quantity : item.quantityAdded
+    })), supplier);
 
     return updatedProducts;
   }
@@ -420,6 +432,9 @@ export class ProductsService {
           "name description quantity isRawMaterial unit"
         )
         .populate("supplier", "name contact address")
+        .sort({
+          "createdAt" : -1
+        })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),

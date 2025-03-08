@@ -29,13 +29,16 @@ let OrdersController = class OrdersController {
             throw new common_1.HttpException(error.message || "Erreur lors de la création de la commande", common_1.HttpStatus.BAD_REQUEST);
         }
     }
-    async processOrder(orderId, action, modifiedItems) {
+    async processOrder(orderId, action) {
         try {
-            return await this.ordersService.processOrder(orderId, action, modifiedItems);
+            return await this.ordersService.processOrder(orderId, action);
         }
         catch (error) {
             throw new common_1.HttpException(error.message || "Erreur lors du traitement de la commande", common_1.HttpStatus.BAD_REQUEST);
         }
+    }
+    async updateOrder(orderId, modifiedItems) {
+        return this.ordersService.updateOrder(orderId, modifiedItems);
     }
     async findUserOrders(request, page = 1, limit = 10, filter) {
         return this.ordersService.findAll(page, limit, request.user.username, filter);
@@ -64,11 +67,18 @@ __decorate([
     (0, common_1.Patch)(":id/process"),
     __param(0, (0, common_1.Param)("id")),
     __param(1, (0, common_1.Body)("action")),
-    __param(2, (0, common_1.Body)("modifiedItems")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], OrdersController.prototype, "processOrder", null);
+__decorate([
+    (0, common_1.Patch)(":id"),
+    __param(0, (0, common_1.Param)("id")),
+    __param(1, (0, common_1.Body)("modifiedItems")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], OrdersController.prototype, "updateOrder", null);
 __decorate([
     (0, common_1.Get)("own"),
     __param(0, (0, common_1.Req)()),

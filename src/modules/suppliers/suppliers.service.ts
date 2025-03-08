@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Supplier } from "./supplier.schema";
-import mongoose, { Model } from "mongoose";
+import mongoose, { Model, Types } from "mongoose";
 import { CreateSupplierDTO } from "./dto/create-supplier.dto";
 import { UpdateSupplierDTO } from "./dto/update-supplier.dto";
 
@@ -40,6 +40,10 @@ export class SuppliersService {
     const [data, total] = await Promise.all([
       this.supplierModel
         .find(query)
+        .populate(
+          "purchasedProducts.product",
+          "_id name unit"
+        )
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -55,7 +59,12 @@ export class SuppliersService {
       throw new BadRequestException(`Invalid supplier ID provided : ${id}`);
     }
     try {
-      const supplier = await this.supplierModel.findById(id);
+      const supplier = await this.supplierModel.findById(id)
+        .populate(
+          "purchasedProducts.product",
+          "_id name unit"
+        )
+      ;
       if (!supplier) {
         throw new BadRequestException(`Supplier with id ${id} not found`);
       }
@@ -110,5 +119,50 @@ export class SuppliersService {
         `Failed to delete suppliers : ${error.message}`
       );
     }
+  }
+  async addProucts(products : {productId : string; quantity : number; purchasePrice : number}[], supplierId : string){
+    try{
+      const supplier = await this.supplierModel.findById(supplierId);
+      supplier.purchasedProducts = this.fixCumulation(supplier.purchasedProducts);
+      products.forEach((product) => {
+        const existingProduct = supplier.purchasedProducts.find((item) => item.product.toString() === product.productId);
+        if(!existingProduct){
+          supplier.purchasedProducts.push({
+            product : new Types.ObjectId(product.productId),
+            price: product.purchasePrice,
+            quantity: product.quantity,
+          });
+        }else{
+          const newPrice = (product.purchasePrice * product.quantity + existingProduct.price * existingProduct.quantity)/(product.quantity + existingProduct.quantity);
+          existingProduct.price = newPrice;
+          existingProduct.quantity += product.quantity;
+        }
+      })
+      return await supplier.save();
+    }catch(error){
+      this.logger.error("Error adding products: ", error.message);
+      throw new BadRequestException(
+        `Failed to add products : ${error.message}`
+      );
+    }
+  }
+  fixCumulation(products : { product: Types.ObjectId; quantity: number; price: number }[]) : { product: Types.ObjectId; quantity: number; price: number }[]{
+    return Object.values(
+      products.reduce((acc, item)=>{
+        if(!acc[item.product.toString()]){
+          acc[item.product.toString()] = {
+            product : item.product,
+            price : item.price,
+            quantity : item.quantity
+          };
+        }else{
+          const newPrice = (item.price * item.quantity + acc[item.product.toString()].price * acc[item.product.toString()].quantity)/(item.quantity + acc[item.product.toString()].quantity);
+          acc[item.product.toString()].price = newPrice;
+          acc[item.product.toString()].quantity += item.quantity;
+        }
+        return acc;
+      }, {} as Record<string,{product : Types.ObjectId; quantity : number; price : number}> )
+
+    )
   }
 }

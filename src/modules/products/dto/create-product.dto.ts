@@ -23,6 +23,26 @@ export class CreateProductDTO {
   @IsNumber()
   stockLimit: number;
 
+  @IsNotEmpty()
+  @IsNumber()
+  quantity : number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  purchasePrice : number;
+
+  @IsOptional()
+  @IsNumber()
+  sellingPriceGold?: number;
+
+  @IsOptional()
+  @IsNumber()
+  sellingPriceSilver?: number;
+
+  @IsOptional()
+  @IsNumber()
+  sellingPriceBronze?: number;
+
   @IsOptional()
   @IsBoolean()
   isRawMaterial?: boolean;

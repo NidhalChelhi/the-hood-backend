@@ -32,7 +32,12 @@ export declare class OrdersService {
     }> & {
         __v: number;
     }>;
-    processOrder(orderId: string, action: "decline" | "accept" | "modify", modifiedItems?: UpdateOrderDTO["orderItems"]): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+    updateOrder(orderId: string, modifiedItems: UpdateOrderDTO["orderItems"]): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }>;
+    processOrder(orderId: string, action: "decline" | "accept"): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
         _id: unknown;
     }> & {
         __v: number;

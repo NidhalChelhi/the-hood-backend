@@ -39,14 +39,12 @@ export class OrdersController {
   @Patch(":id/process")
   async processOrder(
     @Param("id") orderId: string,
-    @Body("action") action: "decline" | "accept" | "modify",
-    @Body("modifiedItems") modifiedItems?: UpdateOrderDTO["orderItems"]
+    @Body("action") action: "decline" | "accept",
   ) {
     try {
       return await this.ordersService.processOrder(
         orderId,
         action,
-        modifiedItems
       );
     } catch (error) {
       throw new HttpException(
@@ -54,6 +52,13 @@ export class OrdersController {
         HttpStatus.BAD_REQUEST
       );
     }
+  }
+  @Patch(":id")
+  async updateOrder(
+    @Param("id") orderId: string,
+    @Body("modifiedItems") modifiedItems?: UpdateOrderDTO["orderItems"]
+  ){
+   return this.ordersService.updateOrder(orderId, modifiedItems)
   }
 
   @Get("own")

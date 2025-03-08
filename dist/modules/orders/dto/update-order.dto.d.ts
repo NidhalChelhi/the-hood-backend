@@ -1,5 +1,6 @@
+import { Types } from "mongoose";
 declare class UpdateOrderItemDTO {
-    product: string;
+    product: Types.ObjectId;
     quantity: number;
     price: number;
 }

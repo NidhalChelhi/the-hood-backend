@@ -14,6 +14,7 @@ const products_service_1 = require("./products.service");
 const product_schema_1 = require("./product.schema");
 const receiving_note_schema_1 = require("./receiving-note.schema");
 const supplier_schema_1 = require("../suppliers/supplier.schema");
+const suppliers_module_1 = require("../suppliers/suppliers.module");
 let ProductsModule = class ProductsModule {
 };
 exports.ProductsModule = ProductsModule;
@@ -25,6 +26,7 @@ exports.ProductsModule = ProductsModule = __decorate([
                 { name: receiving_note_schema_1.ReceivingNote.name, schema: receiving_note_schema_1.ReceivingNoteSchema },
                 { name: supplier_schema_1.Supplier.name, schema: supplier_schema_1.SupplierSchema },
             ]),
+            suppliers_module_1.SuppliersModule,
         ],
         controllers: [products_controller_1.ProductsController],
         providers: [products_service_1.ProductsService],

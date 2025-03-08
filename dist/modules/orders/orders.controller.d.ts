@@ -10,7 +10,12 @@ export declare class OrdersController {
     }> & {
         __v: number;
     }>;
-    processOrder(orderId: string, action: "decline" | "accept" | "modify", modifiedItems?: UpdateOrderDTO["orderItems"]): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+    processOrder(orderId: string, action: "decline" | "accept"): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
+        _id: unknown;
+    }> & {
+        __v: number;
+    }>;
+    updateOrder(orderId: string, modifiedItems?: UpdateOrderDTO["orderItems"]): Promise<import("mongoose").Document<unknown, {}, Order> & Order & Required<{
         _id: unknown;
     }> & {
         __v: number;

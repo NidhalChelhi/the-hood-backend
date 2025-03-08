@@ -7,11 +7,13 @@ import { UpdateProductDTO } from "./dto/update-product.dto";
 import { ConvertRawMaterialsDTO } from "./dto/convert-raw-materials.dto";
 import { EditQuantityDTO } from "./dto/edit-quantity.dto";
 import { Supplier } from "../suppliers/supplier.schema";
+import { SuppliersService } from "../suppliers/suppliers.service";
 export declare class ProductsService {
     private readonly productModel;
     private readonly receivingNoteModel;
     private readonly supplierModel;
-    constructor(productModel: Model<Product>, receivingNoteModel: Model<ReceivingNote>, supplierModel: Model<Supplier>);
+    private readonly supplierService;
+    constructor(productModel: Model<Product>, receivingNoteModel: Model<ReceivingNote>, supplierModel: Model<Supplier>, supplierService: SuppliersService);
     create(createProductDto: CreateProductDTO): Promise<Product>;
     findAll(page?: number, limit?: number, search?: string, filter?: string): Promise<{
         data: Product[];

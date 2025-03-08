@@ -10,6 +10,10 @@ export class CreateSupplierDTO {
   contact: string;
 
   @IsString()
+  @IsNotEmpty()
+  taxNumber : number;
+
+  @IsString()
   @IsOptional()
   address?: string;
 }

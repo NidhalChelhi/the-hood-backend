@@ -63,6 +63,9 @@ let InvoicesService = class InvoicesService {
                 .populate("items.product", "_id name quantity unit stockLimit purchasePrice isBelowStockLimit sellingPriceGold sellingPriceSilver sellingPriceBronze")
                 .populate("orders", "_id processedAt modifiedAt")
                 .populate("createdFor", "_id username email phoneNumber location")
+                .sort({
+                "createdAt": -1
+            })
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .exec(),

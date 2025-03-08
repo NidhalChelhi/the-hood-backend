@@ -1,9 +1,11 @@
 import { IsArray, IsEmpty, IsNotEmpty, ValidateNested } from "class-validator";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
+import { Types } from "mongoose";
 
 class OrderItemDTO {
   @IsNotEmpty()
-  product: string;
+  @Transform(() => Types.ObjectId)
+  product: Types.ObjectId;
 
   @IsNotEmpty()
   quantity: number;

@@ -40,7 +40,8 @@ export class ClientsController {
   }
   @Post("pay/:id")
   async pay(@Param("id") id: string, @Body() body : { points: number }) {
-    return this.clientsService.addPoints(id, -body.points);
+
+    return this.clientsService.payPoints(id, body.points);
   }
 
   @Get(":id")

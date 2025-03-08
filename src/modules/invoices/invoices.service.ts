@@ -81,6 +81,9 @@ export class InvoicesService {
           "createdFor",
           "_id username email phoneNumber location"
         )
+        .sort({
+          "createdAt" : -1
+        })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),

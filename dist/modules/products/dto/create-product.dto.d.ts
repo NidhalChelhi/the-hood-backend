@@ -3,6 +3,11 @@ export declare class CreateProductDTO {
     description: string;
     unit: string;
     stockLimit: number;
+    quantity: number;
+    purchasePrice: number;
+    sellingPriceGold?: number;
+    sellingPriceSilver?: number;
+    sellingPriceBronze?: number;
     isRawMaterial?: boolean;
     isActive?: boolean;
 }

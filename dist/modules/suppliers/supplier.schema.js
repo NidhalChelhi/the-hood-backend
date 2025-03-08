@@ -26,7 +26,24 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)(),
     __metadata("design:type", String)
+], Supplier.prototype, "taxNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)(),
+    __metadata("design:type", String)
 ], Supplier.prototype, "address", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                product: { type: mongoose_2.Types.ObjectId, ref: "Product", required: true },
+                quantity: { type: Number, required: true },
+                price: { type: Number, required: true },
+            },
+        ],
+        required: true,
+    }),
+    __metadata("design:type", Array)
+], Supplier.prototype, "purchasedProducts", void 0);
 exports.Supplier = Supplier = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Supplier);

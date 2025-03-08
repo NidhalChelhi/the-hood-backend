@@ -19,13 +19,20 @@ const mongoose_2 = require("mongoose");
 const product_schema_1 = require("./product.schema");
 const receiving_note_schema_1 = require("./receiving-note.schema");
 const supplier_schema_1 = require("../suppliers/supplier.schema");
+const suppliers_service_1 = require("../suppliers/suppliers.service");
 let ProductsService = class ProductsService {
-    constructor(productModel, receivingNoteModel, supplierModel) {
+    constructor(productModel, receivingNoteModel, supplierModel, supplierService) {
         this.productModel = productModel;
         this.receivingNoteModel = receivingNoteModel;
         this.supplierModel = supplierModel;
+        this.supplierService = supplierService;
     }
     async create(createProductDto) {
+        if (createProductDto.isRawMaterial) {
+            if (!createProductDto.sellingPriceBronze || !createProductDto.sellingPriceSilver || !createProductDto.sellingPriceGold) {
+                throw new common_1.BadRequestException(`Please provide selling prices for the product`);
+            }
+        }
         const createdProduct = new this.productModel(createProductDto);
         return createdProduct.save();
     }
@@ -238,6 +245,11 @@ let ProductsService = class ProductsService {
             supplier: supplier,
         });
         await receivingNote.save();
+        await this.supplierService.addProucts(items.map((item) => ({
+            productId: item.productId,
+            purchasePrice: item.purchasePrice,
+            quantity: item.quantityAdded
+        })), supplier);
         return updatedProducts;
     }
     async editQuantity(editQuantityDto) {
@@ -293,6 +305,9 @@ let ProductsService = class ProductsService {
                 .find(query)
                 .populate("items.product", "name description quantity isRawMaterial unit")
                 .populate("supplier", "name contact address")
+                .sort({
+                "createdAt": -1
+            })
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .exec(),
@@ -320,6 +335,7 @@ exports.ProductsService = ProductsService = __decorate([
     __param(2, (0, mongoose_1.InjectModel)(supplier_schema_1.Supplier.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        suppliers_service_1.SuppliersService])
 ], ProductsService);
 //# sourceMappingURL=products.service.js.map

@@ -68,6 +68,9 @@ export class OrdersService {
           "originalOrderItems.product",
           "_id name quantity unit stockLimit purchasePrice isBelowStockLimit sellingPriceGold sellingPriceSilver sellingPriceBronze"
         )
+        .sort({
+          "createdAt" : -1
+        })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -113,7 +116,7 @@ export class OrdersService {
 
     const itemsWithPrices = await Promise.all(
       orderItems.map(async (item) => {
-        const product = await this.productsService.findOne(item.product);
+        const product = await this.productsService.findOne(item.product.toString());
         if (!product) {
           throw new NotFoundException(
             `Product with ID ${item.product} not found`
@@ -136,9 +139,9 @@ export class OrdersService {
         }
 
         return {
-          product: new Types.ObjectId(item.product),
+          product: item.product,
           quantity: item.quantity,
-          price,
+          price : price || product.purchasePrice || 0,
         };
       })
     );
@@ -166,11 +169,17 @@ export class OrdersService {
       )
       .exec();
   }
+  async updateOrder(orderId : string, modifiedItems : UpdateOrderDTO["orderItems"]){
+    try{
+      return await this.orderModel.findByIdAndUpdate(orderId, {$set : {orderItems : modifiedItems, modifiedAt : new Date()}});
+    }catch(error){
+      throw new Error(`Une erreur est survenue ${error.message}` )
+    }
+  }
 
   async processOrder(
     orderId: string,
-    action: "decline" | "accept" | "modify",
-    modifiedItems?: UpdateOrderDTO["orderItems"]
+    action: "decline" | "accept",
   ) {
     const order = await this.orderModel.findById(orderId).exec();
     if (!order) {
@@ -184,15 +193,8 @@ export class OrdersService {
     if (action === "decline") {
       order.status = OrderStatus.DENIED;
       order.processedAt = new Date();
-    } else if (action === "accept" || action === "modify") {
-      const itemsToProcess =
-        action === "modify" ? modifiedItems : order.orderItems;
-
-      if (!itemsToProcess) {
-        throw new Error(
-          "Les articles sont requis pour accepter ou modifier la commande"
-        );
-      }
+    } else if (action === "accept") {
+      const itemsToProcess = order.orderItems;
 
       const quantities = itemsToProcess.map((item) => item.quantity);
       if (quantities.some((quantity) => quantity <= 0)) {
@@ -214,29 +216,7 @@ export class OrdersService {
         }
       }
 
-      if (action === "modify") {
-        order.orderItems = await Promise.all(
-          itemsToProcess.map(async (item) => {
-            const product = await this.productsService.findOne(
-              item.product.toString()
-            );
-            if (!product) {
-              throw new NotFoundException(
-                `Produit avec l'ID ${item.product} non trouvé`
-              );
-            }
-
-            return {
-              product: new Types.ObjectId(item.product),
-              quantity: item.quantity,
-              price: item.price,
-            };
-          })
-        );
-      }
-
       order.status = OrderStatus.ACCEPTED;
-      order.modifiedAt = action === "modify" ? new Date() : undefined;
       order.processedAt = new Date();
 
       await this.productsService.updateProductStock(order.orderItems);

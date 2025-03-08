@@ -54,17 +54,31 @@ export class ClientsService {
     return await this.ClientModel.findOne({ barCode: barCode });
   }
 
-  async addPoints(id: string, amount: number): Promise<number> {
+  async addPoints(id: string, amount: number): Promise<Client> {
     try {
-      await this.findById(id);
-      const client = await this.ClientModel.findByIdAndUpdate(
-        id,
+      console.log(await this.ClientModel.findOne({barCode : id}));
+      const client = await this.ClientModel.findOneAndUpdate(
+        {barCode : id},
         {
-          $inc: { points: amount },
+          $inc: { points: amount * 0.15 },
         },
         { new: true, runValidators: true }
       ).exec();
-      return client.points;
+      console.log(client)
+      return client;
+    } catch (error) {
+      this.logger.error(`Error adding points : ${error.message} `);
+      throw new BadRequestException(`Failed to add points ${error.message}`);
+    }
+  }
+  async payPoints(id: string, amount: number): Promise<Client> {
+    try {
+      const client = await this.ClientModel.findOne({barCode : id});
+      if(client.points < amount){
+        throw new Error("Not enough points");
+      }
+      client.points -= amount;
+      return await client.save();
     } catch (error) {
       this.logger.error(`Error adding points : ${error.message} `);
       throw new BadRequestException(`Failed to add points ${error.message}`);

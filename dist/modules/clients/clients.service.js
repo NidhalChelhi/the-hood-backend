@@ -32,55 +32,25 @@ let ClientsService = ClientsService_1 = class ClientsService {
             throw new common_1.InternalServerErrorException(`Failed to create client : ${error.message}`);
         }
     }
-    async findAll(searchQuery) {
-        try {
-            let options = {};
-            if (searchQuery.name) {
-                options = {
-                    $expr: {
-                        $regexMatch: {
-                            input: { $concat: ["$firstName", "$lastName"] },
-                            regex: searchQuery.name,
-                            options: 'i'
-                        }
-                    }
-                };
-            }
-            const query = this.ClientModel.find(options);
-            if (searchQuery.sort) {
-                const sortCriteria = (searchQuery.sort === 'asc') ? 1 : -1;
-                query.sort({
-                    "firstName": sortCriteria,
-                    "lastName": sortCriteria
-                });
-            }
-            if (searchQuery.pointSort) {
-                const sortCriteria = (searchQuery.pointSort === 'asc') ? 1 : -1;
-                query.sort({
-                    "points": sortCriteria
-                });
-            }
-            const pageNumber = Math.max((searchQuery.page || 1), 1);
-            const limit = 10;
-            const totalElems = await this.countDocs(options);
-            const totalPages = Math.ceil(totalElems / limit);
-            if (pageNumber > totalPages && totalPages !== 0) {
-                throw new common_1.BadRequestException(`Page Number bigger than total pages total Pages : ${totalPages}, your request page number : ${pageNumber}`);
-            }
-            const clients = await query.skip((pageNumber - 1) * limit).limit(limit).exec();
-            return {
-                clients,
-                pageNumber,
-                totalElems,
-                totalPages
+    async findAll(page = 1, limit = 10, search) {
+        const query = {};
+        if (search) {
+            query.$expr = {
+                $regexMatch: {
+                    input: { $concat: ["$firstName", " ", "$lastName"] },
+                    regex: search,
+                    options: 'i'
+                }
             };
         }
-        catch (error) {
-            throw new common_1.InternalServerErrorException(`Failed to get clients : ${error.message}`);
-        }
-    }
-    async countDocs(options) {
-        return await this.ClientModel.countDocuments(options).exec();
+        const [data, total] = await Promise.all([
+            this.ClientModel.find(query)
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .exec(),
+            this.ClientModel.countDocuments(query).exec(),
+        ]);
+        return { data, total };
     }
     async findById(id) {
         return await this.ClientModel.findById(id);
@@ -90,11 +60,26 @@ let ClientsService = ClientsService_1 = class ClientsService {
     }
     async addPoints(id, amount) {
         try {
-            await this.findById(id);
-            const client = await this.ClientModel.findByIdAndUpdate(id, {
-                $inc: { points: amount },
+            console.log(await this.ClientModel.findOne({ barCode: id }));
+            const client = await this.ClientModel.findOneAndUpdate({ barCode: id }, {
+                $inc: { points: amount * 0.15 },
             }, { new: true, runValidators: true }).exec();
-            return client.points;
+            console.log(client);
+            return client;
+        }
+        catch (error) {
+            this.logger.error(`Error adding points : ${error.message} `);
+            throw new common_1.BadRequestException(`Failed to add points ${error.message}`);
+        }
+    }
+    async payPoints(id, amount) {
+        try {
+            const client = await this.ClientModel.findOne({ barCode: id });
+            if (client.points < amount) {
+                throw new Error("Not enough points");
+            }
+            client.points -= amount;
+            return await client.save();
         }
         catch (error) {
             this.logger.error(`Error adding points : ${error.message} `);

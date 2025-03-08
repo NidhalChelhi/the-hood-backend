@@ -59,6 +59,9 @@ let OrdersService = class OrdersService {
                 .populate("createdBy", "_id username email phoneNumber location")
                 .populate("orderItems.product", "_id name quantity unit stockLimit purchasePrice isBelowStockLimit sellingPriceGold sellingPriceSilver sellingPriceBronze")
                 .populate("originalOrderItems.product", "_id name quantity unit stockLimit purchasePrice isBelowStockLimit sellingPriceGold sellingPriceSilver sellingPriceBronze")
+                .sort({
+                "createdAt": -1
+            })
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .exec(),
@@ -89,7 +92,7 @@ let OrdersService = class OrdersService {
         }
         const restaurantRank = manager.location.rank;
         const itemsWithPrices = await Promise.all(orderItems.map(async (item) => {
-            const product = await this.productsService.findOne(item.product);
+            const product = await this.productsService.findOne(item.product.toString());
             if (!product) {
                 throw new common_1.NotFoundException(`Product with ID ${item.product} not found`);
             }
@@ -108,9 +111,9 @@ let OrdersService = class OrdersService {
                     throw new Error(`Invalid restaurant rank: ${restaurantRank}`);
             }
             return {
-                product: new mongoose_2.Types.ObjectId(item.product),
+                product: item.product,
                 quantity: item.quantity,
-                price,
+                price: price || product.purchasePrice || 0,
             };
         }));
         const order = new this.orderModel({
@@ -128,7 +131,15 @@ let OrdersService = class OrdersService {
             .populate("originalOrderItems.product", "_id name quantity unit stockLimit purchasePrice isBelowStockLimit sellingPriceGold sellingPriceSilver sellingPriceBronze")
             .exec();
     }
-    async processOrder(orderId, action, modifiedItems) {
+    async updateOrder(orderId, modifiedItems) {
+        try {
+            return await this.orderModel.findByIdAndUpdate(orderId, { $set: { orderItems: modifiedItems, modifiedAt: new Date() } });
+        }
+        catch (error) {
+            throw new Error(`Une erreur est survenue ${error.message}`);
+        }
+    }
+    async processOrder(orderId, action) {
         const order = await this.orderModel.findById(orderId).exec();
         if (!order) {
             throw new common_1.NotFoundException(`Commande avec l'ID ${orderId} non trouvée`);
@@ -140,11 +151,8 @@ let OrdersService = class OrdersService {
             order.status = order_status_enum_1.OrderStatus.DENIED;
             order.processedAt = new Date();
         }
-        else if (action === "accept" || action === "modify") {
-            const itemsToProcess = action === "modify" ? modifiedItems : order.orderItems;
-            if (!itemsToProcess) {
-                throw new Error("Les articles sont requis pour accepter ou modifier la commande");
-            }
+        else if (action === "accept") {
+            const itemsToProcess = order.orderItems;
             const quantities = itemsToProcess.map((item) => item.quantity);
             if (quantities.some((quantity) => quantity <= 0)) {
                 throw new Error("La quantité doit être supérieure à 0");
@@ -158,21 +166,7 @@ let OrdersService = class OrdersService {
                     throw new Error(`Stock insuffisant pour le produit ${product.name}`);
                 }
             }
-            if (action === "modify") {
-                order.orderItems = await Promise.all(itemsToProcess.map(async (item) => {
-                    const product = await this.productsService.findOne(item.product.toString());
-                    if (!product) {
-                        throw new common_1.NotFoundException(`Produit avec l'ID ${item.product} non trouvé`);
-                    }
-                    return {
-                        product: new mongoose_2.Types.ObjectId(item.product),
-                        quantity: item.quantity,
-                        price: item.price,
-                    };
-                }));
-            }
             order.status = order_status_enum_1.OrderStatus.ACCEPTED;
-            order.modifiedAt = action === "modify" ? new Date() : undefined;
             order.processedAt = new Date();
             await this.productsService.updateProductStock(order.orderItems);
             await this.deliveryNoteService.createDeliveryNote({
