@@ -6,6 +6,7 @@ export declare class Product extends Document {
     stockLimit: number;
     supplier?: Types.ObjectId;
     quantity: number;
+    tva: number;
     purchasePrice: number;
     sellingPriceGold?: number;
     sellingPriceSilver?: number;

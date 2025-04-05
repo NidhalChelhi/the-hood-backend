@@ -21,6 +21,9 @@ export class Product extends Document {
   @Prop({ required: true, default: 0 })
   quantity: number;
 
+  @Prop({ required: true, default: 0 })
+  tva: number;
+
   @Prop({
     default: 0,
     set: (value: number) => parseFloat(value.toFixed(3)),
