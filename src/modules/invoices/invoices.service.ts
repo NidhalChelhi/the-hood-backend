@@ -105,10 +105,21 @@ export class InvoicesService {
           throw new Error("User not the same for all orders");
         }
       }
-      const totalPrice = orders.reduce((acc, order) => {
-        return acc + order.orderItems.reduce((itemAcc, item) => itemAcc + item.quantity * item.price, 0)
+      const items = orders.map((order) => order.orderItems).flat().reduce((acc, item) => {
+        const existingItem = acc.find((i) => i.product.toString() === item.product.toString());
+        if(existingItem){
+          const totalQuantity = existingItem.quantity + item.quantity; 
+          const newPrice = (existingItem.price * existingItem.quantity + item.quantity * item.price) / totalQuantity;
+          existingItem.price = newPrice;
+          existingItem.quantity = totalQuantity;
+        }else{
+          acc.push({...item});
+        }
+        return acc;
+      }, [] as {product : Types.ObjectId; quantity : number; price : number}[])
+      const totalPrice = items.reduce((acc, item) => {
+        return acc + (item.price * item.quantity);
       }, 0);
-      const items = orders.map((order) => order.orderItems).flat();
       const deliveryNotes =await this.deliveryNoteService.findManyByOrderIds(createInvoiceDTO.orders);
       if (deliveryNotes.some((note) => {
         return note.status === DeliveryNoteStatus.INVOICED
