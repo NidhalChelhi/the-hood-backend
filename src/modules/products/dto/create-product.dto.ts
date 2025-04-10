@@ -29,6 +29,10 @@ export class CreateProductDTO {
 
   @IsNotEmpty()
   @IsNumber()
+  tva : number;
+
+  @IsNotEmpty()
+  @IsNumber()
   purchasePrice : number;
 
   @IsOptional()

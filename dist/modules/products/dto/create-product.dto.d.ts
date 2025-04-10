@@ -4,6 +4,7 @@ export declare class CreateProductDTO {
     unit: string;
     stockLimit: number;
     quantity: number;
+    tva: number;
     purchasePrice: number;
     sellingPriceGold?: number;
     sellingPriceSilver?: number;

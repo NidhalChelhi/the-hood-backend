@@ -40,6 +40,10 @@ __decorate([
     __metadata("design:type", Number)
 ], Product.prototype, "quantity", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ required: true, default: 0 }),
+    __metadata("design:type", Number)
+], Product.prototype, "tva", void 0);
+__decorate([
     (0, mongoose_1.Prop)({
         default: 0,
         set: (value) => parseFloat(value.toFixed(3)),

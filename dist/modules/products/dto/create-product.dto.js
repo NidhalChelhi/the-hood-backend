@@ -43,6 +43,11 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
+], CreateProductDTO.prototype, "tva", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
 ], CreateProductDTO.prototype, "purchasePrice", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
